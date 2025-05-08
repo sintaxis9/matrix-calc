@@ -2,6 +2,18 @@ from core_utils import is_square, is_numeric
 from validations import is_multipliable, have_same_dimensions, is_invertible
 
 
+def scalar_multiply(scalar, matrix):
+    if not isinstance(scalar, (int, float)):
+        raise ValueError("scalar must be a int or float")
+    if not is_numeric(matrix):
+        raise ValueError("matrix must be numeric")
+    
+    return[
+        [scalar * i for i in row]
+        for row in matrix
+    ]
+
+
 def add(matrix1, matrix2):
     if not have_same_dimensions(matrix1, matrix2):
         raise ValueError("the matrix must have the same dimensions")
