@@ -1,5 +1,4 @@
 from core_utils import is_square, is_numeric
-from matrix_ops import determinant
 
 
 def have_same_dimensions(matrix1, matrix2):
@@ -37,9 +36,10 @@ def is_multipliable(matrix1, matrix2):
     return bool(matrix1 and matrix2 and len(matrix1[0]) == len(matrix2))
 
 
-def is_inversible(matrix):
+def is_invertible(matrix):
     if not (is_square(matrix) and is_numeric(matrix)):
         return False
     
+    from matrix_ops import determinant
     det = determinant(matrix)
     return det is not None and det != 0
