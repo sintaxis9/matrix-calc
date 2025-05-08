@@ -1,7 +1,24 @@
-from core_utils import is_square
+from core_utils import is_square, is_numeric
+from matrix_ops import determinant
+
+
+def have_same_dimensions(matrix1, matrix2):
+   if not (is_numeric(matrix1) and is_numeric(matrix2)):
+       raise ValueError("only numeric values!")
+   
+   try:
+       return(
+           len(matrix1) == len(matrix2)
+           and all (len(row1) == len(row2)
+           for row1, row2 in zip(matrix1, matrix2))
+       )
+   
+   except Exception:
+       return False
+
 
 def is_identity(matrix):
-    if not is_square(matrix):
+    if not (is_square(matrix) and is_numeric(matrix)):
         return False
     
     n = len(matrix)
@@ -11,15 +28,18 @@ def is_identity(matrix):
                 return False
     return True
 
-def is_multipliable(matrix1, matrix2):
-    return bool(matrix1 and matrix2 and len(matrix1[0]) == len(matrix2))
 
-def is_inversible(matrix):
-    if not is_square(matrix):
+
+def is_multipliable(matrix1, matrix2):
+    if not (is_numeric(matrix1) and is_numeric(matrix2)):
         return False
     
-    
-    from matrix_ops import determinant
+    return bool(matrix1 and matrix2 and len(matrix1[0]) == len(matrix2))
 
+
+def is_inversible(matrix):
+    if not (is_square(matrix) and is_numeric(matrix)):
+        return False
+    
     det = determinant(matrix)
     return det is not None and det != 0

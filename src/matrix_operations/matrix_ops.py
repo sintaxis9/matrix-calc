@@ -1,7 +1,8 @@
-from core_utils import is_square
+from core_utils import is_square, is_numeric
+
 
 def determinant(matrix):
-    if not is_square(matrix):
+    if not (is_square(matrix) and is_numeric(matrix)):
         return None
     
     n = len(matrix)
