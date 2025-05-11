@@ -1,5 +1,4 @@
-from core_utils import is_square, is_numeric
-
+from .core_utils import is_square, is_numeric 
 
 def have_same_dimensions(matrix1, matrix2):
    if not (is_numeric(matrix1) and is_numeric(matrix2)):
