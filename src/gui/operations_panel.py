@@ -1,5 +1,5 @@
 import customtkinter
-from ..matrix_operations.matrix_ops import add, subtract, multiply, scalar_multiply
+from ..matrix_operations.matrix_ops import add, subtract, multiply, scalar_multiply, determinant, inverse
 
 
 class Operations_Panel(customtkinter.CTkFrame):
@@ -69,131 +69,96 @@ class Numeric_Keypad(customtkinter.CTkFrame):
         if value == "=":
             operation_str = self.display.master.operation.strip()
             if not operation_str:
-                print("No se ingresó operación")
+                print("operation not integred")
                 return
 
             matrix_dict = {}
             for matrix_entry in self.display.master.matrix_list:
                 matrix_dict.update(matrix_entry)
 
-            if operation_str.startswith(("Det(", "Inv(")):
-                try:
-                    func_part, matrix_part = operation_str.split("(", 1)
-                    func_name = func_part.strip()
-                    matrix_name = matrix_part.replace(")", "").strip()
+            if operation_str.count("(") != operation_str.count(")"):
+                print("not balanced ()")
+                return
 
-                    if matrix_name not in matrix_dict:
-                        print(f"Matrix '{matrix_name}' not found")
-                        return
-
-                    matrix = matrix_dict[matrix_name]  
-
-                    if func_name == "Det":
-                        from ..matrix_operations.matrix_ops import determinant
-                        det = determinant(matrix)
-                        print(f"Determinante de {matrix_name}: {det}")
-
-                        result_name = f"Det({matrix_name})"
-                        result_matrix = [[det]]
-
-                    elif func_name == "Inv":
-                        from ..matrix_operations.matrix_ops import inverse
-                        inv = inverse(matrix)
-                        print(f"Inversa de {matrix_name}:")
-                        for row in inv:
-                            print(row)
-                        result_name = f"Inv({matrix_name})"
-                        result_matrix = inv
-
-                    else:
-                        print(f"not support func: {func_name}")
-                        return
-
-                    self.display.master.display_matrix.add_matrix_result(
-                        result_name,
-                        result_matrix
-                    )
-
-                except Exception as e:
-                    print(f"format error: Details: {e}")
-
-            else:
-                tokens = operation_str.split()
+            processed_tokens = []
+            temp_matrices = {}
+            i = 0
+            tokens = operation_str.split()
+            
+            while i < len(tokens):
+                token = tokens[i]
                 
-                terms = []
-                current_term = []
-                for token in tokens:
-                    if token in ('+', '-'):
-                        if current_term:
-                            terms.append(current_term)
-                            terms.append(token)
-                            current_term = []
-                    else:
-                        current_term.append(token)
-                if current_term:
-                    terms.append(current_term)
+                if token.startswith("Det("):
+                    j = i
+                    matrix_name_parts = []
+                    while j < len(tokens) and ")" not in tokens[j]:
+                        matrix_name_parts.append(tokens[j].replace("Det(", "").strip())
+                        j += 1
 
-                processed_terms = []
-                for term in terms:
-                    if isinstance(term, list):
-                        term_result = None
-                        i = 0
-                        while i < len(term):
-                            element = term[i]
-                            
-                            if element == 'x': 
-                                i += 1
-                                continue
-                                
-                            try:
-                                scalar = float(element)
-                                if i + 1 < len(term) and term[i + 1] == 'x' and i + 2 < len(term):
-                                    matrix_name = term[i + 2]
-                                    if matrix_name not in matrix_dict:
-                                        print(f"Matriz '{matrix_name}' no encontrada")
-                                        return
-                                    matrix = matrix_dict[matrix_name]
-                                    if term_result is None:
-                                        term_result = scalar_multiply(scalar, matrix)
-                                    else:
-                                        term_result = multiply(term_result, scalar_multiply(scalar, matrix))
-                                    i += 3
-                                else:
-                                    print("Formato inválido para escalar")
-                                    return
-                                    
-                            except ValueError:
-                                if element not in matrix_dict:
-                                    print(f"Matriz '{element}' no encontrada")
-                                    return
-                                matrix = matrix_dict[element]
-                                if term_result is None:
-                                    term_result = matrix
-                                else:
-                                    term_result = multiply(term_result, matrix)
-                                i += 1
-                        processed_terms.append(term_result)
-                    else:
-                        processed_terms.append(term)  
-
-                if not processed_terms:
-                    print("Operación vacía")
-                    return
+                    if j < len(tokens):
+                        matrix_name_parts.append(tokens[j].replace(")", "").strip())
+                    matrix_name = " ".join(matrix_name_parts).replace("Det(", "").strip()
+                    matrix_name = matrix_name.replace(" ", "")  
                     
-                result = processed_terms[0]
-                for i in range(1, len(processed_terms)):
-                    if isinstance(processed_terms[i], str):
-                        operator = processed_terms[i]
-                        next_term = processed_terms[i + 1]
-                        if operator == '+':
-                            result = add(result, next_term)
-                        elif operator == '-':
-                            result = subtract(result, next_term)
-                        else:
-                            print(f"Operador no soportado: {operator}")
-                            return
+                    if not matrix_name or matrix_name not in matrix_dict:
+                        print(f"matrix '{matrix_name}' not found")
+                        return
+                    
+                    det = determinant(matrix_dict[matrix_name])
+                    processed_tokens.append(str(det))
+                    i = j + 1  
+                
+                elif token.startswith("Inv("):
+                    j = i
+                    matrix_name_parts = []
 
-                print("Resultado final:")
+                    while j < len(tokens) and ")" not in tokens[j]:
+                        matrix_name_parts.append(tokens[j].replace("Inv(", "").strip())
+                        j += 1
+
+                    if j < len(tokens):
+                        matrix_name_parts.append(tokens[j].replace(")", "").strip())
+                    matrix_name = " ".join(matrix_name_parts).replace("Inv(", "").strip()
+                    matrix_name = matrix_name.replace(" ", "")  
+                    
+                    if not matrix_name or matrix_name not in matrix_dict:
+                        print(f"matrix '{matrix_name}' not found")
+                        return
+                    
+
+                    try:
+                        inv = inverse(matrix_dict[matrix_name])
+                        temp_key = f"__INV_{matrix_name}__"
+                        temp_matrices[temp_key] = inv
+                        processed_tokens.append(temp_key)
+
+                    except Exception as e:
+                        print(f"error in Inv({matrix_name}): {str(e)}")
+                        return
+                    i = j + 1 
+                
+                else:
+                    processed_tokens.append(token)
+                    i += 1
+
+            matrix_dict.update(temp_matrices)
+
+            if len(processed_tokens) == 1:
+                result = None
+                token = processed_tokens[0]
+                
+                try:
+                    scalar = float(token)
+                    result = [[scalar]]  
+
+                except ValueError:
+                    if token in matrix_dict:
+                        result = matrix_dict[token]
+                    else:
+                        print(f"element '{token}' not id")
+                        return
+                
+                print("Result:")
                 for row in result:
                     print(row)
                 
@@ -201,6 +166,101 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                     operation_str,
                     result
                 )
+                return
+
+
+            terms = []
+            current_term = []
+
+            for token in processed_tokens:
+                if token in ('+', '-'):
+                    if current_term:
+                        terms.append(current_term)
+                        terms.append(token)
+                        current_term = []
+                else:
+                    current_term.append(token)
+            if current_term:
+                terms.append(current_term)
+
+            processed_terms = []
+            for term in terms:
+                if isinstance(term, list):
+                    term_result = None
+                    i = 0
+                    while i < len(term):
+                        element = term[i]
+                        
+                        if element == 'x':
+                            i += 1
+                            continue 
+                        
+                        try:
+                            scalar = float(element)
+                            if i + 1 < len(term) and term[i + 1] == 'x' and i + 2 < len(term):
+                                matrix_name = term[i + 2]
+                                if matrix_name not in matrix_dict:
+                                    print(f"matrix '{matrix_name}' not found")
+                                    return
+                                matrix = matrix_dict[matrix_name]
+
+                                if term_result is None:
+                                    term_result = scalar_multiply(scalar, matrix)
+                                else:
+                                    term_result = multiply(term_result, scalar_multiply(scalar, matrix))
+                                i += 3
+
+                            else:
+                                term_result = scalar if term_result is None else term_result * scalar
+                                i += 1
+
+                        except ValueError:
+                            if element not in matrix_dict:
+                                print(f"matrix '{element}' not found")
+                                return
+                            matrix = matrix_dict[element]
+
+                            if term_result is None:
+                                term_result = matrix
+
+                            else:
+                                term_result = multiply(term_result, matrix)
+                            i += 1
+                    processed_terms.append(term_result)
+
+
+                else:
+                    processed_terms.append(term)  
+
+
+            if not processed_terms:
+                print("void op")
+                return
+            
+            result = processed_terms[0]
+            for i in range(1, len(processed_terms)):
+                if isinstance(processed_terms[i], str):
+                    operator = processed_terms[i]
+                    next_term = processed_terms[i + 1]
+
+                    if operator == '+':
+                        result = add(result, next_term)
+
+                    elif operator == '-':
+                        result = subtract(result, next_term)
+
+                    else:
+                        print(f"operator not supported: {operator}")
+                        return
+
+            print("Final Result:")
+            for row in result:
+                print(row)
+            
+            self.display.master.display_matrix.add_matrix_result(
+                operation_str,
+                result
+            )
 
         else:
             self.display.update_items(value)
