@@ -7,8 +7,9 @@ class Matrix_Template(customtkinter.CTkFrame):
 
 
 class Matrix_Editor(customtkinter.CTkFrame):
-    def __init__(self, master, global_matrix_list, rows=3, cols=3):
+    def __init__(self, master, global_matrix_list, rows=3, cols=3, app=None):
         super().__init__(master)
+        self.app = app  
         self.rows = rows
         self.cols = cols
         self.entries = []
@@ -83,7 +84,14 @@ class Matrix_Editor(customtkinter.CTkFrame):
     def save_matrix(self):
         name = self.name_entry.get().strip()
         if name == "":
-            print("teni que ponerle una variable a la matriz")
+            print("Tienes que ponerle una variable a la matriz")
+            return
+
+
+        if any(name in matrix_entry for matrix_entry in self.global_matrix_list):
+            message = f"La matriz '{name}' ya está guardada"
+            print(message)
+            self.app.show_temporal_message(message)
             return
 
         matrix = []
@@ -97,11 +105,13 @@ class Matrix_Editor(customtkinter.CTkFrame):
                     value = 0
                 row_data.append(value)
             matrix.append(row_data)
+
         self.global_matrix_list.append({name: matrix})
-        print(f"la matriz: '{name}'")
+        print(f"La matriz '{name}' se ha guardado correctamente")
         print("\nlista global de matricesssss:")
         for item in self.global_matrix_list:
             print(item)
+
 
 
 class Matrix_Display(customtkinter.CTkFrame):
@@ -146,7 +156,7 @@ class Matrix_Container(customtkinter.CTkFrame):
         self.scrollable_frame.pack(fill="both", expand=True)
 
     def add_matrix(self):
-        editor = Matrix_Editor(self.scrollable_frame, self.matrix_list)
+        editor = Matrix_Editor(self.scrollable_frame, self.matrix_list, app=self.master)
         editor.pack(pady=10, padx=10, fill="x", expand=True)
         self.matrix_editors.append(editor)
 
