@@ -212,9 +212,9 @@ class Operations_Panel(customtkinter.CTkFrame):
         self.numeric_keypad = Numeric_Keypad(self, self.display)
         self.numerical_methods = Numerical_Methods(self, self.display)
 
-        self.bottom_panel.grid(row=0, column=0, columnspan=3, padx=5, pady=10)
-        self.numerical_methods.grid(row=1, column=0, padx=5, pady=5)
-        self.numeric_keypad.grid(row=1, column=1, padx=5, pady=5)
+        self.bottom_panel.grid(row=0, column=0, columnspan=3, padx=50, pady=10)
+        self.numerical_methods.grid(row=1, column=0, padx=50, pady=10)
+        self.numeric_keypad.grid(row=1, column=1, padx=50, pady=10)
     
         
 
@@ -232,15 +232,15 @@ class Bottom_Panel(customtkinter.CTkFrame):
         self.display = display 
         self.display_matrix = display_matrix 
             
-        matrixButton = customtkinter.CTkButton(self, width=100, height=20, text="Añadir matrix",font=("Arial",20), command=self.add_matrix)
+        matrixButton = customtkinter.CTkButton(self, width=100, height=25, text="Añadir matrix",font=("Arial",20), command=self.add_matrix)
 
         matrixButton.grid(row=0, column=0,padx=60, pady=5, sticky="nsew")
 
-        acButton = customtkinter.CTkButton(self, width=100, height=20, text="Borrar todo",font=("Arial",20), command=self.delete_all)
+        acButton = customtkinter.CTkButton(self, width=100, height=25, text="Borrar todo",font=("Arial",20), command=self.delete_all)
 
         acButton.grid(row=0, column=1,padx=60, pady=5, sticky="nsew")
 
-        ceButton = customtkinter.CTkButton(self, width=100, height=20, text="⬅",font=("Arial",20), command=self.delete_item)
+        ceButton = customtkinter.CTkButton(self, width=100, height=25, text="⬅",font=("Arial",20), command=self.delete_item)
         
         ceButton.grid(row=0, column=3,padx=60, pady=5, sticky="nsew")
 
@@ -271,7 +271,7 @@ class Numeric_Keypad(customtkinter.CTkFrame):
         ]
 
         for (value, row, column) in numbers:
-            number = customtkinter.CTkButton(self, text=value, width=40, height=30, font=("Arial",20), command=lambda x=value: self.update_number(x))
+            number = customtkinter.CTkButton(self, text=value, width=60, height=30, font=("Arial",20), command=lambda x=value: self.update_number(x))
             number.grid(row=row, column=column,padx=5, pady=5, sticky="nsew")
 
     def update_number(self, value):
@@ -302,7 +302,7 @@ class Numerical_Methods(customtkinter.CTkFrame):
 
 
         for (funtion,row,column) in methods:
-            method = customtkinter.CTkButton(self, text=funtion, width=40, height=30, command=lambda x=funtion: self.update_numerical(x))
+            method = customtkinter.CTkButton(self, text=funtion, width=60, height=30, font=("Arial",20) ,command=lambda x=funtion: self.update_numerical(x))
             method.grid(row=row, column=column,  padx=5, pady=10, sticky="nsew")
             
 
