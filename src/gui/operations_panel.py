@@ -1,5 +1,5 @@
 import customtkinter
-from ..matrix_operations.matrix_ops import add, subtract, multiply
+from ..matrix_operations.matrix_ops import add, subtract, multiply, scalar_multiply
 
 
 class Operations_Panel(customtkinter.CTkFrame):
@@ -120,50 +120,61 @@ class Numeric_Keypad(customtkinter.CTkFrame):
             else:
                 tokens = operation_str.split()
                 if len(tokens) != 3:
-                    print("invalid operation format")
+                    print("invalid format. Examples: 'A + B' o '2 x A'")
                     return
-                
-                matrix1_name, op, matrix2_name = tokens
-                matrix_dict = {}
-                for matrix_entry in self.display.master.matrix_list:
-                    matrix_dict.update(matrix_entry)
 
-                if matrix1_name not in matrix_dict:
-                    print(f"matrix '{matrix1_name}' not found")
-                    return
-                if matrix2_name not in matrix_dict:
-                    print(f"matrix '{matrix2_name}' not found")
-                    return
-                
-                matrix1 = matrix_dict[matrix1_name]
-                matrix2 = matrix_dict[matrix2_name]
-
-                operator_map = {
-                    'x': multiply,
-                    '+': add,
-                    '-': subtract,
-                }
-                if op not in operator_map:
-                    print(f"unsupported operator: {op}")
-                    return
                 try:
-                    result = operator_map[op](matrix1, matrix2)
-                    if result is None:
-                        print(f"operation {op} could not be performed")
+                    scalar = float(tokens[0])
+                    op = tokens[1]
+                    matrix_name = tokens[2]
+
+                    if op != 'x':
+                        print("invalid operator. Use 'X' for scalar.")
                         return
-                    
-                    result_name = f"{matrix1_name}{op}{matrix2_name}"
-                    print("result:")
+
+                    if matrix_name not in matrix_dict:
+                        print(f"matrix '{matrix_name}' not found")
+                        return
+
+                    matrix = matrix_dict[matrix_name]
+                    result = scalar_multiply(scalar, matrix)
+                    print("Result (scalar X matrix):")
                     for row in result:
                         print(row)
 
-                    self.display.master.display_matrix.add_matrix_result(
-                        result_name,
-                        result
-                    )
+                except ValueError:
+                    matrix1_name, op, matrix2_name = tokens
 
-                except ValueError as e:
-                    print(f"error: {e}")
+                    if matrix1_name not in matrix_dict:
+                        print(f"matrix '{matrix1_name}' not found")
+                        return
+                    if matrix2_name not in matrix_dict:
+                        print(f"matrix '{matrix2_name}' not found")
+                        return
+
+                    matrix1 = matrix_dict[matrix1_name]
+                    matrix2 = matrix_dict[matrix2_name]
+
+                    operator_map = {
+                        'x': multiply,
+                        '+': add,
+                        '-': subtract,
+                    }
+
+                    if op not in operator_map:
+                        print(f"Operator not supported: {op}")
+                        return
+
+                    try:
+                        result = operator_map[op](matrix1, matrix2)
+                        if result is None:
+                            print(f"The operation {op} dont work.")
+                            return
+                        print("Result:")
+                        for row in result:
+                            print(row)
+                    except ValueError as e:
+                        print(f"Error: {e}")
 
         else:
             self.display.update_items(value)
