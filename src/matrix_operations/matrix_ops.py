@@ -1,5 +1,5 @@
-from core_utils import is_square, is_numeric
-from validations import is_multipliable, have_same_dimensions, is_invertible
+from .core_utils import is_square, is_numeric
+from .validations import is_multipliable, have_same_dimensions, is_invertible
 
 
 def scalar_multiply(scalar, matrix):

@@ -1,4 +1,5 @@
 import customtkinter
+from ..matrix_operations.matrix_ops import add, subtract, multiply
 
 
 class Operations_Panel(customtkinter.CTkFrame):
@@ -64,8 +65,52 @@ class Numeric_Keypad(customtkinter.CTkFrame):
 
     def update_number(self, value):
         if value == "=":
-            print("display screen:", self.display.master.operation)
-            print("matrices:", self.display.master.matrix_list)
+            operation_str = self.display.master.operation.strip()
+            if not operation_str:
+                print("no operation entered")
+                return
+            
+            tokens = operation_str.split()
+            if len(tokens) != 3:
+                print("invalid operation format")
+                return
+            
+            matrix1_name, op, matrix2_name = tokens
+            matrix_dict = {}
+            for matrix_entry in self.display.master.matrix_list:
+                matrix_dict.update(matrix_entry)
+
+            if matrix1_name not in matrix_dict:
+                print(f"matrix '{matrix1_name}' not found")
+                return
+            if matrix2_name not in matrix_dict:
+                print(f"matrix '{matrix2_name}' not found")
+                return
+            
+            matrix1 = matrix_dict[matrix1_name]
+            matrix2 = matrix_dict[matrix2_name]
+
+            operator_map = {
+                'x': multiply,
+                '+': add,
+                '-': subtract,
+            }
+
+            if op not in operator_map:
+                print(f"unsupported operator: {op}")
+                return
+            
+            try:
+                result = operator_map[op](matrix1, matrix2)
+                if result is None:
+                    print(f"operation {op} could not be performed")
+                    return
+                print("result:")
+                for row in result:
+                    print(row)
+
+            except ValueError as e:
+                print(f"error: {e}")
         else:
             self.display.update_items(value)
 

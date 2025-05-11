@@ -1,7 +1,7 @@
 import customtkinter
-from matrix_container import Matrix_Container
-from display import Display
-from operations_panel import Operations_Panel
+from .matrix_container import Matrix_Container
+from .display import Display
+from .operations_panel import Operations_Panel
 
 
 def Calculator():
