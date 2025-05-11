@@ -95,3 +95,8 @@ def inverse(matrix):
     
     inverse_matrix = [row[n:] for row in augmented]
     return inverse_matrix
+
+def transpose(matrix):
+    if not is_numeric(matrix):
+        raise ValueError("La matriz debe ser numérica")
+    return [list(row) for row in zip(*matrix)]
