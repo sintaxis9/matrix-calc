@@ -40,6 +40,6 @@ def is_invertible(matrix):
     if not (is_square(matrix) and is_numeric(matrix)):
         return False
     
-    from matrix_ops import determinant
+    from .matrix_ops import determinant
     det = determinant(matrix)
     return det is not None and det != 0

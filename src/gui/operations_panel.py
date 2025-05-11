@@ -63,6 +63,8 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                                              command=lambda x=value: self.update_number(x))
             number.grid(row=row, column=column, padx=5, pady=5, sticky="nsew")
 
+
+
     def update_number(self, value):
         if value == "=":
             operation_str = self.display.master.operation.strip()
@@ -70,47 +72,84 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                 print("no operation entered")
                 return
             
-            tokens = operation_str.split()
-            if len(tokens) != 3:
-                print("invalid operation format")
-                return
             
-            matrix1_name, op, matrix2_name = tokens
             matrix_dict = {}
             for matrix_entry in self.display.master.matrix_list:
                 matrix_dict.update(matrix_entry)
 
-            if matrix1_name not in matrix_dict:
-                print(f"matrix '{matrix1_name}' not found")
-                return
-            if matrix2_name not in matrix_dict:
-                print(f"matrix '{matrix2_name}' not found")
-                return
-            
-            matrix1 = matrix_dict[matrix1_name]
-            matrix2 = matrix_dict[matrix2_name]
+            if operation_str.startswith(("Det(", "Inv(")):
+                try:
+                    func_part, matrix_part = operation_str.split("(", 1)
+                    func_name = func_part.strip()
+                    matrix_name = matrix_part.replace(")", "").strip()
 
-            operator_map = {
-                'x': multiply,
-                '+': add,
-                '-': subtract,
-            }
+                    if matrix_name not in matrix_dict:
+                        print(f"Matrix '{matrix_name}' not found")
+                        return
 
-            if op not in operator_map:
-                print(f"unsupported operator: {op}")
-                return
+                    matrix = matrix_dict[matrix_name]  
+
+                    if func_name == "Det":
+                        from ..matrix_operations.matrix_ops import determinant
+                        det = determinant(matrix)
+                        print(f"Determinante de {matrix_name}: {det}")
+
+                    elif func_name == "Inv":
+                        from ..matrix_operations.matrix_ops import inverse
+                        inv = inverse(matrix)
+                        print(f"Inversa de {matrix_name}:")
+                        for row in inv:
+                            print(row)
+
+                    else:
+                        print(f"not support func: {func_name}")
+
+                except Exception as e:
+                    print(f"format error: Details: {e}")
+
             
-            try:
-                result = operator_map[op](matrix1, matrix2)
-                if result is None:
-                    print(f"operation {op} could not be performed")
+            else:
+                tokens = operation_str.split()
+                if len(tokens) != 3:
+                    print("invalid operation format")
                     return
-                print("result:")
-                for row in result:
-                    print(row)
+                
+                matrix1_name, op, matrix2_name = tokens
+                matrix_dict = {}
+                for matrix_entry in self.display.master.matrix_list:
+                    matrix_dict.update(matrix_entry)
 
-            except ValueError as e:
-                print(f"error: {e}")
+                if matrix1_name not in matrix_dict:
+                    print(f"matrix '{matrix1_name}' not found")
+                    return
+                if matrix2_name not in matrix_dict:
+                    print(f"matrix '{matrix2_name}' not found")
+                    return
+                
+                matrix1 = matrix_dict[matrix1_name]
+                matrix2 = matrix_dict[matrix2_name]
+
+
+                operator_map = {
+                    'x': multiply,
+                    '+': add,
+                    '-': subtract,
+                }
+                if op not in operator_map:
+                    print(f"unsupported operator: {op}")
+                    return
+                try:
+                    result = operator_map[op](matrix1, matrix2)
+                    if result is None:
+                        print(f"operation {op} could not be performed")
+                        return
+                    print("result:")
+                    for row in result:
+                        print(row)
+
+                except ValueError as e:
+                    print(f"error: {e}")
+
         else:
             self.display.update_items(value)
 
@@ -132,6 +171,11 @@ class Numerical_Methods(customtkinter.CTkFrame):
                                              command=lambda x=funtion: self.update_numerical(x))
             method.grid(row=row, column=column, padx=5, pady=10, sticky="nsew")
 
+
     def update_numerical(self, operation):
-        self.display.update_items(operation)
-        print(f"metodo numerico: {operation}")
+        if operation in ["Det", "Inv", "Tras"]:
+            self.display.update_items(operation + "(")
+
+        else:
+            self.display.update_items(operation)
+        print(f"numeric method: {operation}")
