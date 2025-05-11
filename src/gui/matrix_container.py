@@ -104,6 +104,36 @@ class Matrix_Editor(customtkinter.CTkFrame):
             print(item)
 
 
+class Matrix_Display(customtkinter.CTkFrame):
+    def __init__(self, master, name: str, matrix: list[list[float]]):
+        super().__init__(master)
+  
+        self.grid_columnconfigure(0, weight=0)
+        self.grid_columnconfigure(1, weight=1)
+
+   
+        self.title_label = customtkinter.CTkLabel(
+            self, text=f"{name} =", font=("Arial", 14, "bold")
+        )
+        self.title_label.grid(row=0, column=0, padx=(0,10), sticky="n")
+
+
+        self.result_widget = customtkinter.CTkFrame(self)
+        self.result_widget.grid(row=0, column=1, sticky="nsew")
+
+        for i, fila in enumerate(matrix):
+            for j, valor in enumerate(fila):
+                cell = customtkinter.CTkLabel(
+                    self.result_widget,
+                    text=str(valor),
+                    width=50,
+                    justify="center"
+                )
+                cell.grid(row=i, column=j, padx=2, pady=2)
+
+
+
+
 class Matrix_Container(customtkinter.CTkFrame):
     def __init__(self, master, matrix_list):
         super().__init__(master)
@@ -122,3 +152,9 @@ class Matrix_Container(customtkinter.CTkFrame):
 
     def get_all_matrices(self):
         return self.matrix_list
+
+
+    def add_matrix_result(self, name: str, matrix: list[list[float]]):
+        """Crea un Matrix_Display para la matriz resultado y lo añade al scroll."""
+        display = Matrix_Display(self.scrollable_frame, name, matrix)
+        display.pack(pady=10, padx=10, fill="x", expand=True)

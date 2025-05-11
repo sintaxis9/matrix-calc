@@ -72,7 +72,6 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                 print("no operation entered")
                 return
             
-            
             matrix_dict = {}
             for matrix_entry in self.display.master.matrix_list:
                 matrix_dict.update(matrix_entry)
@@ -94,20 +93,30 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                         det = determinant(matrix)
                         print(f"Determinante de {matrix_name}: {det}")
 
+                        result_name = f"Det({matrix_name})"
+                        result_matrix = [[det]]
+
                     elif func_name == "Inv":
                         from ..matrix_operations.matrix_ops import inverse
                         inv = inverse(matrix)
                         print(f"Inversa de {matrix_name}:")
                         for row in inv:
                             print(row)
+                        result_name = f"Inv({matrix_name})"
+                        result_matrix = inv
 
                     else:
                         print(f"not support func: {func_name}")
+                        return
+
+                    self.display.master.display_matrix.add_matrix_result(
+                        result_name,
+                        result_matrix
+                    )
 
                 except Exception as e:
                     print(f"format error: Details: {e}")
 
-            
             else:
                 tokens = operation_str.split()
                 if len(tokens) != 3:
@@ -129,7 +138,6 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                 matrix1 = matrix_dict[matrix1_name]
                 matrix2 = matrix_dict[matrix2_name]
 
-
                 operator_map = {
                     'x': multiply,
                     '+': add,
@@ -143,15 +151,23 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                     if result is None:
                         print(f"operation {op} could not be performed")
                         return
+                    
+                    result_name = f"{matrix1_name}{op}{matrix2_name}"
                     print("result:")
                     for row in result:
                         print(row)
+
+                    self.display.master.display_matrix.add_matrix_result(
+                        result_name,
+                        result
+                    )
 
                 except ValueError as e:
                     print(f"error: {e}")
 
         else:
             self.display.update_items(value)
+
 
 
 class Numerical_Methods(customtkinter.CTkFrame):
@@ -162,8 +178,7 @@ class Numerical_Methods(customtkinter.CTkFrame):
         methods = [
             ('A', 0, 0), ('B', 0, 1), ('C', 0, 2),
             ('D', 1, 0), ('F', 1, 1), ('H', 1, 2),
-            ('Det', 2, 0), ('Inv', 2, 1), ('ola', 2, 2),
-            ('tras', 3, 0), ('nose', 3, 1), ('que', 3, 2), 
+            ('Det', 2, 0), ('Inv', 2, 1), ('Tras', 2, 2),
         ]
 
         for (funtion, row, column) in methods:
