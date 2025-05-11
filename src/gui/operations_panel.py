@@ -119,83 +119,88 @@ class Numeric_Keypad(customtkinter.CTkFrame):
 
             else:
                 tokens = operation_str.split()
-                if len(tokens) < 3 or (len(tokens) % 2 == 0):
-                    print("Formato inválido. Ejemplo: 'A + B' o '2 x A + B'")
+                
+                terms = []
+                current_term = []
+                for token in tokens:
+                    if token in ('+', '-'):
+                        if current_term:
+                            terms.append(current_term)
+                            terms.append(token)
+                            current_term = []
+                    else:
+                        current_term.append(token)
+                if current_term:
+                    terms.append(current_term)
+
+                processed_terms = []
+                for term in terms:
+                    if isinstance(term, list):
+                        term_result = None
+                        i = 0
+                        while i < len(term):
+                            element = term[i]
+                            
+                            if element == 'x': 
+                                i += 1
+                                continue
+                                
+                            try:
+                                scalar = float(element)
+                                if i + 1 < len(term) and term[i + 1] == 'x' and i + 2 < len(term):
+                                    matrix_name = term[i + 2]
+                                    if matrix_name not in matrix_dict:
+                                        print(f"Matriz '{matrix_name}' no encontrada")
+                                        return
+                                    matrix = matrix_dict[matrix_name]
+                                    if term_result is None:
+                                        term_result = scalar_multiply(scalar, matrix)
+                                    else:
+                                        term_result = multiply(term_result, scalar_multiply(scalar, matrix))
+                                    i += 3
+                                else:
+                                    print("Formato inválido para escalar")
+                                    return
+                                    
+                            except ValueError:
+                                if element not in matrix_dict:
+                                    print(f"Matriz '{element}' no encontrada")
+                                    return
+                                matrix = matrix_dict[element]
+                                if term_result is None:
+                                    term_result = matrix
+                                else:
+                                    term_result = multiply(term_result, matrix)
+                                i += 1
+                        processed_terms.append(term_result)
+                    else:
+                        processed_terms.append(term)  
+
+                if not processed_terms:
+                    print("Operación vacía")
                     return
-
-                try:
-                    first_token = tokens[0]
-                    current_result = None
-
-                    try:
-                        scalar = float(first_token)
-
-                        if len(tokens) < 3 or tokens[1] != 'x':
-                            print("Formato inválido para escalar. Use 'escalar x matriz'")
-                            return
-                        matrix_name = tokens[2]
-
-                        if matrix_name not in matrix_dict:
-                            print(f"Matriz '{matrix_name}' no encontrada")
-                            return
-                        current_result = scalar_multiply(scalar, matrix_dict[matrix_name])
-                        i = 3  
-
-                    except ValueError:
-                        if first_token not in matrix_dict:
-                            print(f"Matriz '{first_token}' no encontrada")
-                            return
-                        current_result = matrix_dict[first_token]
-                        i = 1 
-
-                    while i < len(tokens):
-                        if i + 1 >= len(tokens):
-                            print("Falta operando después del operador")
-                            return
-
-                        op = tokens[i]
-                        next_operand_token = tokens[i + 1]
-
-                        try:
-                            next_operand = float(next_operand_token)
-                        except ValueError:
-                            if next_operand_token not in matrix_dict:
-                                print(f"Matriz '{next_operand_token}' no encontrada")
-                                return
-                            next_operand = matrix_dict[next_operand_token]
-
-                        if op == 'x':
-                            if isinstance(current_result, (int, float)):
-                                current_result = scalar_multiply(current_result, next_operand)
-
-                            elif isinstance(next_operand, (int, float)):
-                                current_result = scalar_multiply(next_operand, current_result)
-
-                            else:
-                                current_result = multiply(current_result, next_operand)
-
-                        elif op == '+':
-                            current_result = add(current_result, next_operand)
-
-                        elif op == '-':
-                            current_result = subtract(current_result, next_operand)
-
-                        else:
-                            print(f"Operador no soportado: {op}")
-                            return
-                        i += 2  
-
-                    print("Resultado final:")
-                    for row in current_result:
-                        print(row)
                     
-                    self.display.master.display_matrix.add_matrix_result(
-                        operation_str,  
-                        current_result
-                    )
+                result = processed_terms[0]
+                for i in range(1, len(processed_terms)):
+                    if isinstance(processed_terms[i], str):
+                        operator = processed_terms[i]
+                        next_term = processed_terms[i + 1]
+                        if operator == '+':
+                            result = add(result, next_term)
+                        elif operator == '-':
+                            result = subtract(result, next_term)
+                        else:
+                            print(f"Operador no soportado: {operator}")
+                            return
 
-                except Exception as e:
-                    print(f"Error procesando operación: {str(e)}")
+                print("Resultado final:")
+                for row in result:
+                    print(row)
+                
+                self.display.master.display_matrix.add_matrix_result(
+                    operation_str,
+                    result
+                )
 
         else:
             self.display.update_items(value)

@@ -36,7 +36,7 @@ def subtract(matrix1, matrix2):
 
 def multiply(matrix1, matrix2):
     if not is_multipliable(matrix1, matrix2):
-        return None
+        raise ValueError("they're not multipliable")
     
     m, n, p = len(matrix1), len(matrix2[0]), len(matrix2)
     result = [[0 for _ in range(n)] for _ in range(m)]
