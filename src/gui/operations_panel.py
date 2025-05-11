@@ -142,6 +142,9 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                     for row in result:
                         print(row)
 
+                    result_name = f"{scalar} x {matrix_name}"
+                    self.display.master.display_matrix.add_matrix_result(result_name, result)
+
                 except ValueError:
                     matrix1_name, op, matrix2_name = tokens
 
