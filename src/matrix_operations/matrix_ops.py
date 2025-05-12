@@ -1,74 +1,124 @@
-from core_utils import is_square
-from validations import is_multipliable
+# Importa funciones auxiliares para verificar propiedades de matrices.
+from .core_utils import is_square, is_numeric
+from .validations import is_multipliable, have_same_dimensions, is_invertible
+
+
+def scalar_multiply(scalar, matrix):
+    """
+    Multiplica una matriz por un escalar.
+    """
+    if not isinstance(scalar, (int, float)):
+        raise ValueError("El escalar debe ser un número (int o float).")
+    
+    if not is_numeric(matrix):
+        raise ValueError("La matriz debe contener solo valores numéricos.")
+    
+    return [
+        [scalar * i for i in row]
+        for row in matrix
+    ]
+
 
 def add(matrix1, matrix2):
-    """Suma de dos matrices elemento por elemento."""
-    # Verifica que ambas matrices sean cuadradas y del mismo tamaño
-    if not (is_square(matrix1) and is_square(matrix2)) or len(matrix1) != len(matrix2):
-        return None
+    """
+    Suma dos matrices.
+    """
+    if not have_same_dimensions(matrix1, matrix2):
+        raise ValueError("Las matrices deben tener las mismas dimensiones.")
     
-    n = len(matrix1)
     return [
-        [matrix1[i][j] + matrix2[i][j] for j in range(n)]
-        for i in range(n)
+        [matrix1[i][j] + matrix2[i][j] for j in range(len(matrix1[0]))]
+        for i in range(len(matrix1))
     ]
 
 def subtract(matrix1, matrix2):
-    """Resta de dos matrices elemento por elemento."""
-    # Verifica que ambas matrices sean cuadradas y del mismo tamaño
-    if not (is_square(matrix1) and is_square(matrix2)) or len(matrix1) != len(matrix2):
-        return None
+    """
+    Resta la segunda matriz de la primera.
+    """
+    if not have_same_dimensions(matrix1, matrix2):
+        raise ValueError("Las matrices deben tener las mismas dimensiones.")
     
-    n = len(matrix1)
     return [
-        [matrix1[i][j] - matrix2[i][j] for j in range(n)]
-        for i in range(n)
+        [matrix1[i][j] - matrix2[i][j] for j in range(len(matrix1[0]))]
+        for i in range(len(matrix1))
     ]
 
+
 def multiply(matrix1, matrix2):
-    """Multiplicacion de dos matrices usando producto matricial."""
-    # Verifica si las matrices se pueden multiplicar
+    """
+    Multiplica dos matrices.
+    """
     if not is_multipliable(matrix1, matrix2):
-        return None
+        raise ValueError("Las matrices no son multiplicables.")
     
-    m = len(matrix1)       # Filas de matrix1
-    n = len(matrix2[0])    # Columnas de matrix2
-    p = len(matrix2)       # Columnas de matrix1 (que debe ser igual a filas de matrix2)
-
-    result = [[0 for _ in range(n)] for _ in range(m)]  # Matriz resultado: m x n
-
-    for i in range(m):          # Recorre filas de matrix1
-        for j in range(n):      # Recorre columnas de matrix2
-            for k in range(p):  # Recorre la dimensión común (p)
-                result[i][j] += matrix1[i][k] * matrix2[k][j]  # Producto punto
+    m, n, p = len(matrix1), len(matrix2[0]), len(matrix2)
+    result = [[0 for _ in range(n)] for _ in range(m)]
+    for i in range(m):
+        for j in range(n):
+            for k in range(p):
+                result[i][j] += matrix1[i][k] * matrix2[k][j]
     return result
 
+
 def determinant(matrix):
-    if not is_square(matrix):
-        return None
+    """
+    Calcula el determinante de una matriz.
+    """
+    if not (is_square(matrix) and is_numeric(matrix)):
+        raise ValueError("La matriz debe ser cuadrada y contener solo valores numéricos.")
     
     n = len(matrix)
-
+    
     if n == 1:
         return matrix[0][0]
-    
     elif n == 2:
         return matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0]
-    
     det = 0
     for c in range(n):
         sub = [row[:c] + row[c + 1:] for row in matrix[1:]]
         det += ((-1) ** c) * matrix[0][c] * determinant(sub)
     return det
 
-# Ejemplo de uso
-A = [[1, 2], 
-     [3, 4]]
 
-B = [[5, 6,4], 
-     [7, 8,2]]
 
-print("Suma:", add(A, B))
-print("Resta:", subtract(A, B))
-print("Multiplicación:", multiply(A, B))
-print("Determinante:", determinant(A))
+def inverse(matrix):
+    """
+    Calcula la inversa de una matriz.
+    """
+    if not (is_square(matrix) and is_numeric(matrix)):
+        raise ValueError("La matriz debe ser cuadrada y contener solo valores numéricos.")
+    
+    if not is_invertible(matrix):
+        raise ValueError("La matriz debe ser invertible.")
+    
+    n = len(matrix)
+    augmented = [
+        row[:] + [1 if i == j else 0 for j in range(n)]
+        for i, row in enumerate(matrix)
+    ]
+    for i in range(n):
+        pivot = augmented[i][i]
+        
+        if pivot == 0:
+            raise ValueError("La matriz es singular durante el pivoteo; no se puede calcular la inversa.")
+        augmented[i] = [x / pivot for x in augmented[i]]
+        
+        for j in range(n):
+            if i != j:
+                factor = augmented[j][i]
+                augmented[j] = [
+                    augmented[j][k] - factor * augmented[i][k]
+                    for k in range(2 * n)
+                ]
+    inverse_matrix = [row[n:] for row in augmented]
+    return inverse_matrix
+
+
+def transpose(matrix):
+    """
+    Transpone una matriz.
+    """
+    if not is_numeric(matrix):
+        raise ValueError("La matriz debe contener solo valores numéricos.")
+    
+    return [list(row) for row in zip(*matrix)]

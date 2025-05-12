@@ -1,45 +1,67 @@
-# Importa la función is_square desde el módulo core_utils
-from core_utils import is_square
+# Importa funciones auxiliares para verificar si una matriz es cuadrada y si contiene valores numéricos.
+from .core_utils import is_square, is_numeric
 
-# Verifica si una matriz es la matriz identidad
+
+def have_same_dimensions(matrix1, matrix2):
+    """
+    Verifica si dos matrices tienen las mismas dimensiones.
+    """
+    # Verifica si ambas matrices son numéricas.
+    if not (is_numeric(matrix1) and is_numeric(matrix2)):
+        raise ValueError("only numeric values!")  # Lanza un error si no son numéricas.
+    
+    try:
+        # Retorna True si ambas matrices tienen el mismo número de filas y las mismas longitudes de filas.
+        return (
+            len(matrix1) == len(matrix2)  # Comprueba si ambas matrices tienen el mismo número de filas.
+            and all(len(row1) == len(row2)  # Verifica que todas las filas de ambas matrices tengan la misma longitud.
+                    for row1, row2 in zip(matrix1, matrix2))  # Usa zip para iterar sobre las filas de ambas matrices.
+        )
+    except Exception:
+        return False  # Retorna False si ocurre una excepción.
+    
+
 def is_identity(matrix):
-    # La matriz debe ser cuadrada para ser una identidad
-    if not is_square(matrix):
-        return False
-
-    # Tamaño de la matriz (n x n)
-    n = len(matrix)
-
-    # Recorre cada celda de la matriz
+    """
+    Verifica si una matriz es la matriz identidad.
+    """
+    # Verifica que la matriz sea cuadrada y numérica.
+    if not (is_square(matrix) and is_numeric(matrix)):
+        return False  # Retorna False si no lo es.
+    n = len(matrix)  # Obtiene el tamaño de la matriz (número de filas o columnas).
+    
+    # Itera sobre cada elemento de la matriz.
     for i in range(n):
         for j in range(n):
-            # En la diagonal principal (i == j), debe haber un 1
-            # Fuera de la diagonal (i != j), debe haber un 0
+            # Comprueba las condiciones de la matriz identidad.
             if (i == j and matrix[i][j] != 1) or (i != j and matrix[i][j] != 0):
-                return False
+                return False  # Retorna False si alguna condición no se cumple.
+    
+    return True  # Retorna True si todas las condiciones se cumplen.
 
-    # Si pasa todas las condiciones, es una matriz identidad
-    return True
 
-
-# Verifica si dos matrices pueden ser multiplicadas
 def is_multipliable(matrix1, matrix2):
-    # Verifica que ambas matrices existan y que el número de columnas
-    # de la primera sea igual al número de filas de la segunda
+    """
+    Verifica si dos matrices son multiplicables.
+    """
+    # Verifica que ambas matrices sean numéricas.
+    if not (is_numeric(matrix1) and is_numeric(matrix2)):
+        return False  # Retorna False si no lo son.
+    # Retorna True si ambas matrices no están vacías y el número de columnas de la primera es igual al número de filas de la segunda.
     return bool(matrix1 and matrix2 and len(matrix1[0]) == len(matrix2))
 
 
-# Verifica si una matriz cuadrada es inversible
-def is_inversible(matrix):
-    # Una matriz solo puede ser inversible si es cuadrada
-    if not is_square(matrix):
-        return False
-
-    # Importa la función determinant desde otro módulo
-    from matrix_ops import determinant
-
-    # Calcula el determinante
-    det = determinant(matrix)
-
-    # Una matriz es inversible si su determinante no es cero ni indefinido (None)
+def is_invertible(matrix):
+    """
+    Verifica si una matriz es invertible.
+    """
+    # Verifica que la matriz sea cuadrada y numérica.
+    if not (is_square(matrix) and is_numeric(matrix)):
+        return False  # Retorna False si no lo es.
+    
+    # Importa la función 'determinant' del módulo 'matrix_ops'.
+    from .matrix_ops import determinant
+    det = determinant(matrix)  # Calcula el determinante de la matriz.
+    
+    # Retorna True si el determinante no es None y es diferente de 0, lo que indica que la matriz es invertible.
     return det is not None and det != 0
