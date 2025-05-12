@@ -238,9 +238,15 @@ class Numeric_Keypad(customtkinter.CTkFrame):
 
                             if term_result is None:
                                 term_result = matrix
-
                             else:
+                                if len(term_result[0]) != len(matrix):
+                                    self.display.master.show_temporal_message(
+                                        "Error: columnas de la primera matriz deben ser iguales a filas de la segunda."
+                                    )
+                                    return
+
                                 term_result = multiply(term_result, matrix)
+
                             i += 1
                     processed_terms.append(term_result)
 
