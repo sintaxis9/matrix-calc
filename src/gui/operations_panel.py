@@ -79,7 +79,7 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                 matrix_dict.update(matrix_entry)
 
             if operation_str.count("(") != operation_str.count(")"):
-                print("not balanced ()")
+                print("Parentesis no balanceados")
                 self.display.master.show_temporal_message("Te faltó '(' o ')'")
                 return
 

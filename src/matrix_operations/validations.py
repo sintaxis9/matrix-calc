@@ -3,7 +3,7 @@ from .core_utils import is_square, is_numeric
 
 def have_same_dimensions(matrix1, matrix2):
    if not (is_numeric(matrix1) and is_numeric(matrix2)):
-       raise ValueError("only numeric values!")
+       raise ValueError("solo valores numericos")
    
    try:
        return(

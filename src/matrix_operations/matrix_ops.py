@@ -4,9 +4,9 @@ from .validations import is_multipliable, have_same_dimensions, is_invertible
 
 def scalar_multiply(scalar, matrix):
     if not isinstance(scalar, (int, float)):
-        raise ValueError("scalar must be a int or float")
+        raise ValueError("El escalar debe de ser int o float")
     if not is_numeric(matrix):
-        raise ValueError("matrix must be numeric")
+        raise ValueError("La matriz debe de ser numerica")
     
     return[
         [scalar * i for i in row]
@@ -16,7 +16,7 @@ def scalar_multiply(scalar, matrix):
 
 def add(matrix1, matrix2):
     if not have_same_dimensions(matrix1, matrix2):
-        raise ValueError("the matrix must have the same dimensions")
+        raise ValueError("Las matrices deben de tener las mismas dimensiones")
     
     return[
         [matrix1[i][j] + matrix2[i][j] for j in range(len(matrix1[0]))]
@@ -26,7 +26,7 @@ def add(matrix1, matrix2):
 
 def subtract(matrix1, matrix2):
     if not have_same_dimensions(matrix1, matrix2):
-        raise ValueError("the matrix must have the same dimensions")
+        raise ValueError("Las matrices deben de tener las mismas dimensiones")
     
     return[
         [matrix1[i][j] - matrix2[i][j] for j in range(len(matrix1[0]))]
@@ -36,7 +36,7 @@ def subtract(matrix1, matrix2):
 
 def multiply(matrix1, matrix2):
     if not is_multipliable(matrix1, matrix2):
-        raise ValueError("they're not multipliable")
+        raise ValueError("Las matrices no son multiplicables")
     
     m, n, p = len(matrix1), len(matrix2[0]), len(matrix2)
     result = [[0 for _ in range(n)] for _ in range(m)]
@@ -70,7 +70,7 @@ def determinant(matrix):
 
 def inverse(matrix):
     if not (is_square(matrix) and is_numeric(matrix) and is_invertible(matrix)):
-        raise ValueError("matrix must be square, numeric and invertible")
+        raise ValueError("La matriz debe ser cuadrada, numerica e inversible")
     
     n = len(matrix)
 
@@ -82,7 +82,7 @@ def inverse(matrix):
     for i in range(n):
         pivot = augmented[i][i]
         if pivot == 0:
-            raise ValueError("matrix is singular during pivoting")
+            raise ValueError("La matriz no es inversible")
         augmented[i] = [x / pivot for x in augmented[i]]
 
         for j in range(n):
