@@ -35,7 +35,7 @@ def Calculator():
             self.panel_control.grid(row=3, column=0, padx=10, pady=(10, 0))
 
             self.operation_label = OperationDisplay(self)
-            self.operation_label.configure(width=200)
+            self.operation_label.configure(width=250)
 
             self.grid_columnconfigure(1, weight=1)
 

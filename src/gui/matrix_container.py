@@ -45,6 +45,27 @@ class Matrix_Editor(customtkinter.CTkFrame):
         self.save_btn.grid(row=2, column=0, padx=5, pady=2)
         self.clear_btn.grid(row=2, column=1, padx=5, pady=2)
 
+    def _parse_entry(self, entry):
+        """Convierte el texto del entry a float o devuelve 0 si falla."""
+        try:
+            return float(entry.get())
+        except ValueError:
+            return 0
+        
+    def print_saved_matrices(self):
+        """Imprime por consola todas las matrices guardadas."""
+        if not self.global_matrix_list:
+            print("No hay matrices guardadas.")
+            return
+
+        for mat_dict in self.global_matrix_list:
+            for name, matrix in mat_dict.items():
+                print(f"Matriz '{name}':")
+                for row in matrix:
+                    print("   ", row)
+                print()  # línea en blanco entre matrices
+
+
     def draw_matrix(self):
         for widget in self.matrix_frame.winfo_children():
             widget.destroy()
@@ -82,36 +103,33 @@ class Matrix_Editor(customtkinter.CTkFrame):
                 entry.delete(0, "end")
 
     def save_matrix(self):
-        name = self.name_entry.get().strip()
-        if name == "":
-            print("Tienes que ponerle una variable a la matriz")
-            return
+            name = self.name_entry.get().strip()
+            if not name:
+                self.app.show_temporal_message("Tienes que asignar un nombre a la matriz")
+                return
 
+            # Usa _parse_entry para cada celda
+            matrix = [
+                [self._parse_entry(e) for e in row]
+                for row in self.entries
+            ]
 
-        if any(name in matrix_entry for matrix_entry in self.global_matrix_list):
-            message = f"La matriz '{name}' ya está guardada"
-            print(message)
-            self.app.show_temporal_message(message)
-            return
-
-        matrix = []
-        for row in self.entries:
-            row_data = []
-            for entry in row:
-                value = entry.get()
-                try:
-                    value = float(value)
-                except ValueError:
-                    value = 0
-                row_data.append(value)
-            matrix.append(row_data)
-
-        self.global_matrix_list.append({name: matrix})
-        print(f"La matriz '{name}' se ha guardado correctamente")
-        print("\nlista global de matricesssss:")
-        for item in self.global_matrix_list:
-            print(item)
-
+            # Comprueba si ya existe y sobreescribe o añade
+            existing_idx = next(
+                (i for i, d in enumerate(self.global_matrix_list) if name in d),
+                None
+            )
+            if existing_idx is not None:
+                self.global_matrix_list[existing_idx][name] = matrix
+                self.app.show_temporal_message(
+                    f"La matriz '{name}' se ha actualizado correctamente", color="green"
+                )
+            else:
+                self.global_matrix_list.append({name: matrix})
+                self.app.show_temporal_message(
+                    f"La matriz '{name}' se ha guardado correctamente", color="green"
+                )
+                self.print_saved_matrices()
 
 
 class Matrix_Display(customtkinter.CTkFrame):
