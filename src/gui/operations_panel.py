@@ -67,11 +67,13 @@ class Numeric_Keypad(customtkinter.CTkFrame):
 
     def update_number(self, value):
         if value == "=":
+            for win in StepByStepWindow.instances[:]:
+                win._on_close()  
+            StepByStepWindow.window_count = 0
+
             operation_str = self.display.master.operation.strip()
             if not operation_str:
-                
                 self.display.master.show_temporal_message("Debes ingresar primero una operación")
-                
                 return
 
             matrix_dict = {}
@@ -97,21 +99,20 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                     while j < len(tokens) and ")" not in tokens[j]:
                         matrix_name_parts.append(tokens[j].replace("Det(", "").strip())
                         j += 1
-
                     if j < len(tokens):
                         matrix_name_parts.append(tokens[j].replace(")", "").strip())
-                    matrix_name = " ".join(matrix_name_parts).replace("Det(", "").strip()
-                    matrix_name = matrix_name.replace(" ", "")  
-                    
+                    matrix_name = "".join(matrix_name_parts).strip()
+
                     if not matrix_name or matrix_name not in matrix_dict:
-                        print(f"matrix '{matrix_name}' not found")
-                        result = f"matrix '{matrix_name}' no fue encontrada, si la asignaste tienes que guardarlo"
-                        self.display.master.show_temporal_message(result)
+                        self.display.master.show_temporal_message(
+                            f"Matriz '{matrix_name}' no fue encontrada; guárdala primero"
+                        )
                         return
-                    
-                    det = determinant(matrix_dict[matrix_name])
-                    processed_tokens.append(str(det))
-                    i = j + 1  
+
+                    det_value, det_steps = determinant(matrix_dict[matrix_name])
+                    StepByStepWindow(self.display.master, det_steps)
+                    processed_tokens.append(str(det_value))
+                    i = j + 1 
                 
                 elif token.startswith("Inv("):
                     j = i
@@ -134,15 +135,15 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                     
 
                     try:
-                        inv = inverse(matrix_dict[matrix_name])
+                        inv, steps = inverse(matrix_dict[matrix_name])  
                         temp_key = f"__INV_{matrix_name}__"
                         temp_matrices[temp_key] = inv
                         processed_tokens.append(temp_key)
-
+                        
+                        StepByStepWindow(self.display.master, steps)
                     except Exception as e:
-
-                        print(f"error in Inv({matrix_name}): {str(e)}")
-                        result = f"error en Inv({matrix_name}): {str(e)}"
+                        print(f"Error en Inv({matrix_name}): {str(e)}")
+                        result = f"Error en Inv({matrix_name}): {str(e)}"
                         self.display.master.show_temporal_message(result)
                         return
                     i = j + 1 
@@ -150,31 +151,29 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                 elif token.startswith("Tras("):
                     j = i
                     matrix_name_parts = []
+
                     while j < len(tokens) and ")" not in tokens[j]:
                         matrix_name_parts.append(tokens[j].replace("Tras(", "").strip())
                         j += 1
+
                     if j < len(tokens):
                         matrix_name_parts.append(tokens[j].replace(")", "").strip())
-                    matrix_name = " ".join(matrix_name_parts).replace("Tras(", "").strip()
-                    matrix_name = matrix_name.replace(" ", "") 
-                    
+                    matrix_name = "".join(matrix_name_parts).strip()
+
                     if not matrix_name or matrix_name not in matrix_dict:
-                        print(f"Matriz '{matrix_name}' no encontrada")
-                        result = f"Matriz '{matrix_name}' no fue encontrada; guárdala primero"
-                        self.display.master.show_temporal_message(result)
+                        self.display.master.show_temporal_message(
+                            f"Matriz '{matrix_name}' no fue encontrada; guárdala primero"
+                        )
                         return
-                    
-                    try:
-                        matrix = matrix_dict[matrix_name]
-                        tras = transpose(matrix)
-                        temp_key = f"__TRAS_{matrix_name}__"
-                        temp_matrices[temp_key] = tras
-                        processed_tokens.append(temp_key)
-                    except Exception as e:
-                        print(f"Error en Tras({matrix_name}): {str(e)}")
-                        result = f"Error en Tras({matrix_name}): {str(e)}"
-                        self.display.master.show_temporal_message(result)
-                        return
+
+                    trasposed, steps_tras = transpose(matrix_dict[matrix_name])
+
+                    temp_key = f"__TRAS_{matrix_name}__"
+                    temp_matrices[temp_key] = trasposed
+                    processed_tokens.append(temp_key)
+
+                    StepByStepWindow(self.display.master, steps_tras)
+
                     i = j + 1
                 
                 else:
@@ -242,18 +241,23 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                             if i + 1 < len(term) and term[i + 1] == 'x' and i + 2 < len(term):
                                 matrix_name = term[i + 2]
                                 if matrix_name not in matrix_dict:
-                                    print(f"matrix '{matrix_name}' not found")
-                                    result = f"matrix '{matrix_name}' no fue encontrada, si la creaste tienes que guardarla"
-                                    self.display.master.show_temporal_message(f"Matriz '{matrix_name}' no fue encontrada; guárdala primero")
+                                    self.display.master.show_temporal_message(
+                                        f"Matriz '{matrix_name}' no fue encontrada; guárdala primero"
+                                    )
                                     return
                                 matrix = matrix_dict[matrix_name]
 
-                                if term_result is None:
-                                    term_result = scalar_multiply(scalar, matrix)
-                                else:
-                                    term_result = multiply(term_result, scalar_multiply(scalar, matrix))
-                                i += 3
+                                scaled_matrix, steps_scalar = scalar_multiply(scalar, matrix)
 
+                                if term_result is None:
+                                    term_result = scaled_matrix
+                                else:
+                                    term_result = multiply(term_result, scaled_matrix)
+
+                                StepByStepWindow(self.display.master, steps_scalar)
+
+                                i += 3
+                                continue
                             else:
                                 term_result = scalar if term_result is None else term_result * scalar
                                 i += 1
@@ -261,13 +265,16 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                         except ValueError:
                             if element not in matrix_dict:
                                 print(f"matrix '{element}' not found")
-                                result = f"matrix '{element}' no fue encontrada; guárdala primero"
-                                self.display.master.show_temporal_message(result)
+                                self.display.master.show_temporal_message(
+                                    f"Matriz '{element}' no fue encontrada; guárdala primero"
+                                )
                                 return
+
                             matrix = matrix_dict[element]
 
                             if term_result is None:
                                 term_result = matrix
+
                             else:
                                 if len(term_result[0]) != len(matrix):
                                     self.display.master.show_temporal_message(
@@ -275,7 +282,8 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                                     )
                                     return
 
-                                term_result = multiply(term_result, matrix)
+                                term_result, steps_mul = multiply(term_result, matrix)
+                                StepByStepWindow(self.display.master, steps_mul)
 
                             i += 1
                     processed_terms.append(term_result)
@@ -297,10 +305,20 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                     next_term = processed_terms[i + 1]
 
                     if operator == '+':
-                        result = add(result, next_term)
+                        try:
+                            result_add, steps_add = add(result, next_term)
+                            result = result_add
+                            
+                            StepByStepWindow(self.display.master, steps_add)
+                        except ValueError as e:
+                            print(f"Error: {str(e)}")
+                            self.display.master.show_temporal_message(str(e))
+                            return
 
                     elif operator == '-':
-                        result = subtract(result, next_term)
+                        result_sub, steps_sub = subtract(result, next_term)
+                        result = result_sub
+                        StepByStepWindow(self.display.master, steps_sub)
 
                     else:
                         print(f"operator not supported: {operator}")
@@ -345,3 +363,41 @@ class Numerical_Methods(customtkinter.CTkFrame):
         else:
             self.display.update_items(operation)
         print(f"numeric method: {operation}")
+
+
+class StepByStepWindow(customtkinter.CTkToplevel):
+    window_count = 0
+    instances: list["StepByStepWindow"] = []
+
+    def __init__(self, parent, steps):
+        StepByStepWindow.window_count += 1
+        super().__init__(parent)
+        StepByStepWindow.instances.append(self)
+
+        self.title(f"Pasos de la Operación #{StepByStepWindow.window_count}")
+        self.geometry("600x400")
+        
+        self.scrollable_frame = customtkinter.CTkScrollableFrame(self)
+        self.scrollable_frame.pack(fill="both", expand=True)
+        
+        for desc, matrix in steps:
+            step_label = customtkinter.CTkLabel(
+                self.scrollable_frame, 
+                text=desc + "\n" + self.format_matrix(matrix),
+                font=("Courier New", 12)
+            )
+            step_label.pack(padx=10, pady=5, anchor="w")
+
+        self.protocol("WM_DELETE_WINDOW", self._on_close)
+
+    def _on_close(self):
+        if self in StepByStepWindow.instances:
+            StepByStepWindow.instances.remove(self)
+        super().destroy()
+
+    def format_matrix(self, matrix):
+        return "\n".join(
+            "[" + "  ".join(f"{x:.2f}" for x in row) + "]"
+            for row in matrix
+        )
+
