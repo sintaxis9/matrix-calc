@@ -146,7 +146,7 @@ class Matrix_Display(customtkinter.CTkFrame):
             for j, valor in enumerate(fila):
                 cell = customtkinter.CTkLabel(
                     self.result_widget,
-                    text=str(valor),
+                    text=f"{valor:.2f}",
                     font=("Arial", 15),
                     width=60,
                     height=40,
