@@ -1,6 +1,6 @@
-# README
+# Matrix-Calc
 
-Este documento explica cómo preparar y ejecutar la **Calculadora de Matrices** paso a paso.
+El presente proyeto se trata meramente de una **calculadora de matrices**
 
 ## 1. Requisitos
 
@@ -9,42 +9,25 @@ Antes de comenzar, asegúrate de tener instalado:
 - **Python** (versión 3.x)
 - Acceso al repositorio del **proyecto** en tu máquina
 
-## 2. Crear el _entorno virtual_
+## 2. Comandos necesarios:
 
-En el directorio raíz del **proyecto**, crea un _entorno virtual_ con el siguiente comando:
+En el directorio raíz del **proyecto**, crea un _entorno virtual_ con el siguiente comando para luego ejecutar el proyecto de la siguiente manera:
 
-_python -m venv matrixenv_
+```bash
+python -m venv matrixenv #creacion del entorno
 
-Este paso aísla las dependencias del **proyecto** del resto de tu sistema.
+.\matrixenv\Scripts\activate #activacion del entorno
 
-## 3. Activar el _entorno virtual_
+pip install -r requirements.txt #instalacion de dependencias dentro del entorno
 
-Para empezar a usar el _entorno virtual_, ejecuta:
+python -m src.gui.main #ejecucion del proyecto
 
-_.\matrixenv\Scripts\activate_
-
-(verifica que el prompt de la terminal muestre el prefijo `(matrixenv)`)
-
-## 4. Instalar las **dependencias**
-
-Con el _entorno virtual_ activo, instala todas las **dependencias** listadas en el archivo `requirements.txt`:
-
-_pip install -r requirements.txt_
-
-Esto descargará e instalará las librerías necesarias para el **proyecto**.
-
-## 5. Ejecutar la **aplicación**
-
-Una vez instaladas las **dependencias**, inicia la **aplicación** con:
-
-_python -m src.gui.main_
-
-Se abrirá la ventana de la Calculadora de Matrices, lista para usar.
-
-## 6. Desactivar el _entorno virtual_
+```
 
 Cuando hayas terminado de trabajar, puedes salir del _entorno virtual_ con:
 
-_deactivate_
+```bash
+deactivate
+```
 
 De esta manera tu terminal volverá a usar las configuraciones globales de Python.
