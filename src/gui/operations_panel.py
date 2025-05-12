@@ -64,279 +64,229 @@ class Numeric_Keypad(customtkinter.CTkFrame):
             number.grid(row=row, column=column, padx=5, pady=5, sticky="nsew")
 
 
+class Numeric_Keypad(customtkinter.CTkFrame):
+    def __init__(self, master, display):
+        super().__init__(master)
+        self.display = display
+
+        numbers = [
+            (' ', 0, 0), ('(', 0, 1), (')', 0, 2), (' ', 0, 4),
+            ('7', 1, 0), ('8', 1, 1), ('9', 1, 2), ('x', 1, 4),
+            ('4', 2, 0), ('5', 2, 1), ('6', 2, 2), ('-', 2, 4),
+            ('1', 3, 0), ('2', 3, 1), ('3', 3, 2), ('+', 3, 4),
+            ('0', 4, 0), ('.', 4, 1), (' ', 4, 2), ('=', 4, 4),
+        ]
+
+        for (value, row, column) in numbers:
+            btn = customtkinter.CTkButton(
+                self,
+                text=value,
+                width=60, height=30,
+                font=("Arial", 20),
+                command=lambda x=value: self.update_number(x)
+            )
+            btn.grid(row=row, column=column, padx=5, pady=5, sticky="nsew")
 
     def update_number(self, value):
-        if value == "=":
-            for win in StepByStepWindow.instances[:]:
-                win._on_close()  
-            StepByStepWindow.window_count = 0
-
-            operation_str = self.display.master.operation.strip()
-            if not operation_str:
-                self.display.master.show_temporal_message("Debes ingresar primero una operación")
-                return
-
-            matrix_dict = {}
-            for matrix_entry in self.display.master.matrix_list:
-                matrix_dict.update(matrix_entry)
-
-            if operation_str.count("(") != operation_str.count(")"):
-                print("Parentesis no balanceados")
-                self.display.master.show_temporal_message("Te faltó '(' o ')'")
-                return
-
-            processed_tokens = []
-            temp_matrices = {}
-            i = 0
-            tokens = operation_str.split()
-            
-            while i < len(tokens):
-                token = tokens[i]
-                
-                if token.startswith("Det("):
-                    j = i
-                    matrix_name_parts = []
-                    while j < len(tokens) and ")" not in tokens[j]:
-                        matrix_name_parts.append(tokens[j].replace("Det(", "").strip())
-                        j += 1
-                    if j < len(tokens):
-                        matrix_name_parts.append(tokens[j].replace(")", "").strip())
-                    matrix_name = "".join(matrix_name_parts).strip()
-
-                    if not matrix_name or matrix_name not in matrix_dict:
-                        self.display.master.show_temporal_message(
-                            f"Matriz '{matrix_name}' no fue encontrada; guárdala primero"
-                        )
-                        return
-
-                    det_value, det_steps = determinant(matrix_dict[matrix_name])
-                    StepByStepWindow(self.display.master, det_steps)
-                    processed_tokens.append(str(det_value))
-                    i = j + 1 
-                
-                elif token.startswith("Inv("):
-                    j = i
-                    matrix_name_parts = []
-
-                    while j < len(tokens) and ")" not in tokens[j]:
-                        matrix_name_parts.append(tokens[j].replace("Inv(", "").strip())
-                        j += 1
-
-                    if j < len(tokens):
-                        matrix_name_parts.append(tokens[j].replace(")", "").strip())
-                    matrix_name = " ".join(matrix_name_parts).replace("Inv(", "").strip()
-                    matrix_name = matrix_name.replace(" ", "")  
-                    
-                    if not matrix_name or matrix_name not in matrix_dict:
-                        print(f"matrix '{matrix_name}' not found")
-                        result = f"matrix '{matrix_name}' no fue encontrada, si la creaste tienes que guardarla"
-                        self.display.master.show_temporal_message(result)
-                        return
-                    
-
-                    try:
-                        inv, steps = inverse(matrix_dict[matrix_name])  
-                        temp_key = f"__INV_{matrix_name}__"
-                        temp_matrices[temp_key] = inv
-                        processed_tokens.append(temp_key)
-                        
-                        StepByStepWindow(self.display.master, steps)
-                    except Exception as e:
-                        print(f"Error en Inv({matrix_name}): {str(e)}")
-                        result = f"Error en Inv({matrix_name}): {str(e)}"
-                        self.display.master.show_temporal_message(result)
-                        return
-                    i = j + 1 
-
-                elif token.startswith("Tras("):
-                    j = i
-                    matrix_name_parts = []
-
-                    while j < len(tokens) and ")" not in tokens[j]:
-                        matrix_name_parts.append(tokens[j].replace("Tras(", "").strip())
-                        j += 1
-
-                    if j < len(tokens):
-                        matrix_name_parts.append(tokens[j].replace(")", "").strip())
-                    matrix_name = "".join(matrix_name_parts).strip()
-
-                    if not matrix_name or matrix_name not in matrix_dict:
-                        self.display.master.show_temporal_message(
-                            f"Matriz '{matrix_name}' no fue encontrada; guárdala primero"
-                        )
-                        return
-
-                    trasposed, steps_tras = transpose(matrix_dict[matrix_name])
-
-                    temp_key = f"__TRAS_{matrix_name}__"
-                    temp_matrices[temp_key] = trasposed
-                    processed_tokens.append(temp_key)
-
-                    StepByStepWindow(self.display.master, steps_tras)
-
-                    i = j + 1
-                
-                else:
-                    processed_tokens.append(token)
-                    i += 1
-
-            matrix_dict.update(temp_matrices)
-
-            if len(processed_tokens) == 1:
-                result = None
-                token = processed_tokens[0]
-                
-                try:
-                    scalar = float(token)
-                    result = [[scalar]]  
-
-                except ValueError:
-                    if token in matrix_dict:
-                        result = matrix_dict[token]
-                    else:
-                        print(f"element '{token}' not id")
-                        result = f"elemento '{token}' no reconocido"
-                        self.display.master.show_temporal_message(result)
-                        return
-                
-                print("Result:")
-                for row in result:
-                    print(row)
-                
-                self.display.master.display_matrix.add_matrix_result(
-                    operation_str,
-                    result
-                )
-                return
-
-
-            terms = []
-            current_term = []
-
-            for token in processed_tokens:
-                if token in ('+', '-'):
-                    if current_term:
-                        terms.append(current_term)
-                        terms.append(token)
-                        current_term = []
-                else:
-                    current_term.append(token)
-            if current_term:
-                terms.append(current_term)
-
-            processed_terms = []
-            for term in terms:
-                if isinstance(term, list):
-                    term_result = None
-                    i = 0
-                    while i < len(term):
-                        element = term[i]
-                        
-                        if element == 'x':
-                            i += 1
-                            continue 
-                        
-                        try:
-                            scalar = float(element)
-                            if i + 1 < len(term) and term[i + 1] == 'x' and i + 2 < len(term):
-                                matrix_name = term[i + 2]
-                                if matrix_name not in matrix_dict:
-                                    self.display.master.show_temporal_message(
-                                        f"Matriz '{matrix_name}' no fue encontrada; guárdala primero"
-                                    )
-                                    return
-                                matrix = matrix_dict[matrix_name]
-
-                                scaled_matrix, steps_scalar = scalar_multiply(scalar, matrix)
-
-                                if term_result is None:
-                                    term_result = scaled_matrix
-                                else:
-                                    term_result = multiply(term_result, scaled_matrix)
-
-                                StepByStepWindow(self.display.master, steps_scalar)
-
-                                i += 3
-                                continue
-                            else:
-                                term_result = scalar if term_result is None else term_result * scalar
-                                i += 1
-
-                        except ValueError:
-                            if element not in matrix_dict:
-                                print(f"matrix '{element}' not found")
-                                self.display.master.show_temporal_message(
-                                    f"Matriz '{element}' no fue encontrada; guárdala primero"
-                                )
-                                return
-
-                            matrix = matrix_dict[element]
-
-                            if term_result is None:
-                                term_result = matrix
-
-                            else:
-                                if len(term_result[0]) != len(matrix):
-                                    self.display.master.show_temporal_message(
-                                        "Error: columnas de la primera matriz deben ser iguales a filas de la segunda."
-                                    )
-                                    return
-
-                                term_result, steps_mul = multiply(term_result, matrix)
-                                StepByStepWindow(self.display.master, steps_mul)
-
-                            i += 1
-                    processed_terms.append(term_result)
-
-
-                else:
-                    processed_terms.append(term)  
-
-
-            if not processed_terms:
-                print("void op")
-                self.display.master.show_temporal_message("Operación vacía o mal formada")
-                return
-            
-            result = processed_terms[0]
-            for i in range(1, len(processed_terms)):
-                if isinstance(processed_terms[i], str):
-                    operator = processed_terms[i]
-                    next_term = processed_terms[i + 1]
-
-                    if operator == '+':
-                        try:
-                            result_add, steps_add = add(result, next_term)
-                            result = result_add
-                            
-                            StepByStepWindow(self.display.master, steps_add)
-                        except ValueError as e:
-                            print(f"Error: {str(e)}")
-                            self.display.master.show_temporal_message(str(e))
-                            return
-
-                    elif operator == '-':
-                        result_sub, steps_sub = subtract(result, next_term)
-                        result = result_sub
-                        StepByStepWindow(self.display.master, steps_sub)
-
-                    else:
-                        print(f"operator not supported: {operator}")
-                        result = f"La operacion '{operator}' no es soportada"
-                        self.display.master.show_temporal_message(result)
-                        return
-
-            print("Final Result:")
-            for row in result:
-                print(row)
-            
-            self.display.master.display_matrix.add_matrix_result(
-                operation_str,
-                result
-            )
-
-        else:
+        # Si no es "=", simplemente actualizamos el display
+        if value != "=":
             self.display.update_items(value)
+            return
+
+        # Referencia al widget de operaciones y limpiar
+        op_disp = self.display.master.operation_label
+        op_disp.clear()
+
+        # Lista de listas de pasos, una sublista por operación
+        operations_steps: list[list[tuple[str, list[list[float]]]]] = []
+
+        operation_str = self.display.master.operation.strip()
+        if not operation_str:
+            self.display.master.show_temporal_message("Debes ingresar primero una operación")
+            return
+
+        # matrices guardadas
+        matrix_dict = {}
+        for entry in self.display.master.matrix_list:
+            matrix_dict.update(entry)
+
+        #  paréntesis balanceados
+        if operation_str.count("(") != operation_str.count(")"):
+            self.display.master.show_temporal_message("Te faltó '(' o ')'")
+            return
+
+        tokens = operation_str.split()
+        processed_tokens: list[str] = []
+        temp_matrices: dict[str, list[list[float]]] = {}
+        i = 0
+
+        while i < len(tokens):
+            token = tokens[i]
+
+            # Determinante
+            if token.startswith("Det("):
+                j = i
+                name_parts = []
+                while j < len(tokens) and ")" not in tokens[j]:
+                    name_parts.append(tokens[j].replace("Det(", ""))
+                    j += 1
+                if j < len(tokens):
+                    name_parts.append(tokens[j].replace(")", ""))
+                name = "".join(name_parts).strip()
+
+                if name not in matrix_dict:
+                    self.display.master.show_temporal_message(f"Matriz '{name}' no encontrada; guárdala primero")
+                    return
+
+                det_value, det_steps = determinant(matrix_dict[name])
+                processed_tokens.append(str(det_value))
+                operations_steps.append(det_steps)
+                i = j + 1
+                continue
+
+            # Inversa
+            elif token.startswith("Inv("):
+                j = i
+                name_parts = []
+                while j < len(tokens) and ")" not in tokens[j]:
+                    name_parts.append(tokens[j].replace("Inv(", ""))
+                    j += 1
+                if j < len(tokens):
+                    name_parts.append(tokens[j].replace(")", ""))
+                name = "".join(name_parts).strip()
+
+                if name not in matrix_dict:
+                    self.display.master.show_temporal_message(f"Matriz '{name}' no encontrada; guárdala primero")
+                    return
+
+                inv_matrix, inv_steps = inverse(matrix_dict[name])
+                key = f"__INV_{name}__"
+                temp_matrices[key] = inv_matrix
+                processed_tokens.append(key)
+                operations_steps.append(inv_steps)
+                i = j + 1
+                continue
+
+            # Traspuesta
+            elif token.startswith("Tras("):
+                j = i
+                name_parts = []
+                while j < len(tokens) and ")" not in tokens[j]:
+                    name_parts.append(tokens[j].replace("Tras(", ""))
+                    j += 1
+                if j < len(tokens):
+                    name_parts.append(tokens[j].replace(")", ""))
+                name = "".join(name_parts).strip()
+
+                if name not in matrix_dict:
+                    self.display.master.show_temporal_message(f"Matriz '{name}' no encontrada; guárdala primero")
+                    return
+
+                tras_matrix, tras_steps = transpose(matrix_dict[name])
+                key = f"__TRAS_{name}__"
+                temp_matrices[key] = tras_matrix
+                processed_tokens.append(key)
+                operations_steps.append(tras_steps)
+                i = j + 1
+                continue
+
+            else:
+                processed_tokens.append(token)
+                i += 1
+
+        # Agregar matrices temporales al diccionario
+        matrix_dict.update(temp_matrices)
+
+        if len(processed_tokens) == 1:
+            token = processed_tokens[0]
+            try:
+                scalar = float(token)
+                result = [[scalar]]
+            except ValueError:
+                if token in matrix_dict:
+                    result = matrix_dict[token]
+                else:
+                    self.display.master.show_temporal_message(f"Elemento '{token}' no reconocido")
+                    return
+
+            self.display.master.display_matrix.add_matrix_result(operation_str, result)
+            if operations_steps:
+                op_disp.show_steps(operations_steps)
+            return
+
+        # === 2ª pasada: Escalar×Matriz y Matriz×Matriz ===
+        terms: list = []
+        current_term: list = []
+        for tok in processed_tokens:
+            if tok in ('+', '-'):
+                if current_term:
+                    terms.append(current_term)
+                    terms.append(tok)
+                    current_term = []
+            else:
+                current_term.append(tok)
+        if current_term:
+            terms.append(current_term)
+
+        processed_terms: list = []
+        for term in terms:
+            if isinstance(term, list):
+                term_result = None
+                idx_term = 0
+                while idx_term < len(term):
+                    elem = term[idx_term]
+                    # Escalar * Matriz
+                    try:
+                        scalar = float(elem)
+                        if (idx_term + 1 < len(term) and term[idx_term+1] == 'x'
+                                and idx_term + 2 < len(term)):
+                            m_name = term[idx_term+2]
+                            if m_name not in matrix_dict:
+                                self.display.master.show_temporal_message(f"Matriz '{m_name}' no encontrada; guárdala primero")
+                                return
+                            scaled, steps_s = scalar_multiply(scalar, matrix_dict[m_name])
+                            term_result = scaled if term_result is None else multiply(term_result, scaled)[0]
+                            operations_steps.append(steps_s)
+                            idx_term += 3
+                            continue
+                    except ValueError:
+                        pass
+
+                    # Matriz × Matriz
+                    if elem in matrix_dict:
+                        mat = matrix_dict[elem]
+                        if term_result is None:
+                            term_result = mat
+                        else:
+                            term_result, steps_m = multiply(term_result, mat)
+                            operations_steps.append(steps_m)
+                        idx_term += 1
+                    else:
+                        idx_term += 1
+
+                processed_terms.append(term_result)
+            else:
+                # operador '+' o '-'
+                processed_terms.append(term)
+
+        result = processed_terms[0]
+        idx_res = 1
+        while idx_res < len(processed_terms):
+            op = processed_terms[idx_res]
+            nxt = processed_terms[idx_res + 1]
+            if op == '+':
+                result, steps_a = add(result, nxt)
+                operations_steps.append(steps_a)
+            elif op == '-':
+                result, steps_s = subtract(result, nxt)
+                operations_steps.append(steps_s)
+            idx_res += 2
+
+        self.display.master.display_matrix.add_matrix_result(operation_str, result)
+        if operations_steps:
+            op_disp.show_steps(operations_steps)
+
+
 
 
 
@@ -377,7 +327,44 @@ class StepByStepWindow(customtkinter.CTkToplevel):
         self.title(f"Pasos de la Operación #{StepByStepWindow.window_count}")
         self.geometry("600x400")
         
+        
+class StepByStepWindow(customtkinter.CTkToplevel):
+    window_count = 0
+    instances: list["StepByStepWindow"] = []
+
+    def __init__(self, parent, steps):
+        StepByStepWindow.window_count += 1
+        super().__init__(parent)
+        StepByStepWindow.instances.append(self)
+
+        self.title(f"Pasos de la Operación #{StepByStepWindow.window_count}")
+        self.geometry("600x400")
+        
         self.scrollable_frame = customtkinter.CTkScrollableFrame(self)
+        self.scrollable_frame.pack(fill="both", expand=True)
+        
+        for desc, matrix in steps:
+            step_label = customtkinter.CTkLabel(
+                self.scrollable_frame, 
+                text=desc + "\n" + self.format_matrix(matrix),
+                font=("Courier New", 12)
+            )
+            step_label.pack(padx=10, pady=5, anchor="w")
+
+        self.protocol("WM_DELETE_WINDOW", self._on_close)
+
+    def _on_close(self):
+        if self in StepByStepWindow.instances:
+            StepByStepWindow.instances.remove(self)
+        super().destroy()
+
+    def format_matrix(self, matrix):
+        return "\n".join(
+            "[" + "  ".join(f"{x:.2f}" for x in row) + "]"
+            for row in matrix
+        )
+
+
         self.scrollable_frame.pack(fill="both", expand=True)
         
         for desc, matrix in steps:
