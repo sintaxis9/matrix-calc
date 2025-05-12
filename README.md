@@ -7,6 +7,7 @@
 Antes de comenzar, asegúrate de tener instalado:
 
 - **Python** (versión 3.x)
+- virtualenv
 - Acceso al repositorio del **proyecto** en tu máquina
 
 ## 2. Comandos necesarios:
