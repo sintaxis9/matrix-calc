@@ -299,7 +299,7 @@ class Numerical_Methods(customtkinter.CTkFrame):
 
         methods = [
             ('A', 0, 0), ('B', 0, 1), ('C', 0, 2),
-            ('D', 1, 0), ('F', 1, 1), ('H', 1, 2),
+            ('D', 1, 0), ('E', 1, 1), ('F', 1, 2),
             ('Det', 2, 0), ('Inv', 2, 1), ('Tras', 2, 2),
         ]
 
