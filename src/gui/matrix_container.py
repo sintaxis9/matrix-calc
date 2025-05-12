@@ -122,24 +122,40 @@ class Matrix_Display(customtkinter.CTkFrame):
         self.grid_columnconfigure(1, weight=1)
 
    
-        self.title_label = customtkinter.CTkLabel(
-            self, text=f"{name} =", font=("Arial", 14, "bold")
-        )
+        self.title_label = customtkinter.CTkLabel(self, text=f"{name} =", font=("Arial", 14, "bold"), padx=10,pady=35)
         self.title_label.grid(row=0, column=0, padx=(0,10), sticky="n")
 
 
-        self.result_widget = customtkinter.CTkFrame(self)
-        self.result_widget.grid(row=0, column=1, sticky="nsew")
+        self.result_widget = customtkinter.CTkFrame(
+            self,
+            fg_color="#424242",
+            corner_radius=8,
+            border_color="#575353",
+            border_width=1
+        )
+        self.result_widget.grid(row=0, column=1, padx=8, pady=8, sticky="nsew")
 
+        # Hace que las filas y columnas crezcan de forma uniforme
+        for r in range(len(matrix)):
+            self.result_widget.grid_rowconfigure(r, weight=1)
+        for c in range(len(matrix[0]) if matrix else 0):
+            self.result_widget.grid_columnconfigure(c, weight=1)
+
+        # Celdas con fondo blanco, fuente más grande y padding
         for i, fila in enumerate(matrix):
             for j, valor in enumerate(fila):
                 cell = customtkinter.CTkLabel(
                     self.result_widget,
                     text=str(valor),
-                    width=50,
+                    font=("Arial", 15),
+                    width=60,
+                    height=40,
+                    fg_color="#1976D2",
+                    corner_radius=5,
+                    text_color="#FEFEFE",
                     justify="center"
                 )
-                cell.grid(row=i, column=j, padx=2, pady=2)
+                cell.grid(row=i, column=j, padx=4, pady=4, sticky="nsew")
 
 
 

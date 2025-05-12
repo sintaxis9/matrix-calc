@@ -69,7 +69,9 @@ class Numeric_Keypad(customtkinter.CTkFrame):
         if value == "=":
             operation_str = self.display.master.operation.strip()
             if not operation_str:
-                print("operation not integred")
+                
+                self.display.master.show_temporal_message("Debes ingresar primero una operación")
+                
                 return
 
             matrix_dict = {}
@@ -78,6 +80,7 @@ class Numeric_Keypad(customtkinter.CTkFrame):
 
             if operation_str.count("(") != operation_str.count(")"):
                 print("not balanced ()")
+                self.display.master.show_temporal_message("Te faltó '(' o ')'")
                 return
 
             processed_tokens = []
@@ -102,6 +105,8 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                     
                     if not matrix_name or matrix_name not in matrix_dict:
                         print(f"matrix '{matrix_name}' not found")
+                        result = f"matrix '{matrix_name}' no fue encontrada, si la asignaste tienes que guardarlo"
+                        self.display.master.show_temporal_message(result)
                         return
                     
                     det = determinant(matrix_dict[matrix_name])
@@ -123,6 +128,8 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                     
                     if not matrix_name or matrix_name not in matrix_dict:
                         print(f"matrix '{matrix_name}' not found")
+                        result = f"matrix '{matrix_name}' no fue encontrada, si la creaste tienes que guardarla"
+                        self.display.master.show_temporal_message(result)
                         return
                     
 
@@ -133,7 +140,10 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                         processed_tokens.append(temp_key)
 
                     except Exception as e:
+
                         print(f"error in Inv({matrix_name}): {str(e)}")
+                        result = f"error en Inv({matrix_name}): {str(e)}"
+                        self.display.master.show_temporal_message(result)
                         return
                     i = j + 1 
                 
@@ -156,6 +166,8 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                         result = matrix_dict[token]
                     else:
                         print(f"element '{token}' not id")
+                        result = f"elemento '{token}' no reconocido"
+                        self.display.master.show_temporal_message(result)
                         return
                 
                 print("Result:")
@@ -201,6 +213,8 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                                 matrix_name = term[i + 2]
                                 if matrix_name not in matrix_dict:
                                     print(f"matrix '{matrix_name}' not found")
+                                    result = f"matrix '{matrix_name}' no fue encontrada, si la creaste tienes que guardarla"
+                                    self.display.master.show_temporal_message(f"Matriz '{matrix_name}' no fue encontrada; guárdala primero")
                                     return
                                 matrix = matrix_dict[matrix_name]
 
@@ -217,6 +231,8 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                         except ValueError:
                             if element not in matrix_dict:
                                 print(f"matrix '{element}' not found")
+                                result = f"matrix '{element}' no fue encontrada; guárdala primero"
+                                self.display.master.show_temporal_message(result)
                                 return
                             matrix = matrix_dict[element]
 
@@ -235,6 +251,7 @@ class Numeric_Keypad(customtkinter.CTkFrame):
 
             if not processed_terms:
                 print("void op")
+                self.display.master.show_temporal_message("Operación vacía o mal formada")
                 return
             
             result = processed_terms[0]
@@ -251,6 +268,8 @@ class Numeric_Keypad(customtkinter.CTkFrame):
 
                     else:
                         print(f"operator not supported: {operator}")
+                        result = f"La operacion '{operator}' no es soportada"
+                        self.display.master.show_temporal_message(result)
                         return
 
             print("Final Result:")
