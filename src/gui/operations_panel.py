@@ -93,33 +93,36 @@ class Numeric_Keypad(customtkinter.CTkFrame):
             self.display.update_items(value)
             return
 
-        # Referencia al widget de operaciones y limpiar
+        # Referencia al widget de operaciones y limpiamos pasos anteriores
         op_disp = self.display.master.operation_label
         op_disp.clear()
 
-        # Lista de listas de pasos, una sublista por operación
+        # Acumulador de pasos de cada suboperación
         operations_steps: list[list[tuple[str, list[list[float]]]]] = []
 
+        # La cadena completa de la operación
         operation_str = self.display.master.operation.strip()
         if not operation_str:
             self.display.master.show_temporal_message("Debes ingresar primero una operación")
             return
 
-        # matrices guardadas
+        # Diccionario de matrices guardadas
         matrix_dict = {}
         for entry in self.display.master.matrix_list:
             matrix_dict.update(entry)
 
-        #  paréntesis balanceados
+        # Paréntesis balanceados
         if operation_str.count("(") != operation_str.count(")"):
             self.display.master.show_temporal_message("Te faltó '(' o ')'")
             return
 
+        # Tokenizamos la operación
         tokens = operation_str.split()
         processed_tokens: list[str] = []
         temp_matrices: dict[str, list[list[float]]] = {}
         i = 0
 
+        # Primera pasada: detectamos Det(), Inv() y Tras()
         while i < len(tokens):
             token = tokens[i]
 
@@ -190,13 +193,15 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                 i = j + 1
                 continue
 
+            # Cualquier otro token
             else:
                 processed_tokens.append(token)
                 i += 1
 
-        # Agregar matrices temporales al diccionario
+        # Agregamos matrices temporales (inversas, etc.) al diccionario
         matrix_dict.update(temp_matrices)
 
+        # Si sólo hay un token, puede ser número o matriz
         if len(processed_tokens) == 1:
             token = processed_tokens[0]
             try:
@@ -219,10 +224,9 @@ class Numeric_Keypad(customtkinter.CTkFrame):
         current_term: list = []
         for tok in processed_tokens:
             if tok in ('+', '-'):
-                if current_term:
-                    terms.append(current_term)
-                    terms.append(tok)
-                    current_term = []
+                terms.append(current_term)
+                terms.append(tok)
+                current_term = []
             else:
                 current_term.append(tok)
         if current_term:
@@ -235,6 +239,7 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                 idx_term = 0
                 while idx_term < len(term):
                     elem = term[idx_term]
+
                     # Escalar * Matriz
                     try:
                         scalar = float(elem)
@@ -242,10 +247,27 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                                 and idx_term + 2 < len(term)):
                             m_name = term[idx_term+2]
                             if m_name not in matrix_dict:
-                                self.display.master.show_temporal_message(f"Matriz '{m_name}' no encontrada; guárdala primero")
+                                self.display.master.show_temporal_message(
+                                    f"Matriz '{m_name}' no encontrada; guárdala primero"
+                                )
                                 return
                             scaled, steps_s = scalar_multiply(scalar, matrix_dict[m_name])
-                            term_result = scaled if term_result is None else multiply(term_result, scaled)[0]
+
+                            if term_result is None:
+                                term_result = scaled
+                            else:
+                                # Validación de dimensiones antes de multiplicar
+                                filasA, colsA = len(term_result), len(term_result[0])
+                                filasB, colsB = len(scaled), len(scaled[0])
+                                if colsA != filasB:
+                                    self.display.master.show_temporal_message(
+                                        f"No se pueden multiplicar matrices de tamaño "
+                                        f"{filasA}×{colsA} y {filasB}×{colsB}"
+                                    )
+                                    return
+                                term_result, steps_m = multiply(term_result, scaled)
+                                operations_steps.append(steps_m)
+
                             operations_steps.append(steps_s)
                             idx_term += 3
                             continue
@@ -258,8 +280,18 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                         if term_result is None:
                             term_result = mat
                         else:
+                            # Validación de dimensiones antes de multiplicar
+                            filasA, colsA = len(term_result), len(term_result[0])
+                            filasB, colsB = len(mat), len(mat[0])
+                            if colsA != filasB:
+                                self.display.master.show_temporal_message(
+                                    f"No se pueden multiplicar matrices de tamaño "
+                                    f"{filasA}×{colsA} y {filasB}×{colsB}"
+                                )
+                                return
                             term_result, steps_m = multiply(term_result, mat)
                             operations_steps.append(steps_m)
+
                         idx_term += 1
                     else:
                         idx_term += 1
@@ -269,6 +301,7 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                 # operador '+' o '-'
                 processed_terms.append(term)
 
+        # Combinamos sumas y restas finales
         result = processed_terms[0]
         idx_res = 1
         while idx_res < len(processed_terms):
@@ -282,6 +315,7 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                 operations_steps.append(steps_s)
             idx_res += 2
 
+        # Mostramos el resultado y, si hay pasos, los desplegamos
         self.display.master.display_matrix.add_matrix_result(operation_str, result)
         if operations_steps:
             op_disp.show_steps(operations_steps)
