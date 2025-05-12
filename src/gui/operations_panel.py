@@ -122,7 +122,7 @@ class Numeric_Keypad(customtkinter.CTkFrame):
         temp_matrices: dict[str, list[list[float]]] = {}
         i = 0
 
-        # Primera pasada: detectamos Det(), Inv() y Tras()
+        # Primera pasada: Det(), Inv() y Tras()
         while i < len(tokens):
             token = tokens[i]
 
@@ -193,15 +193,14 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                 i = j + 1
                 continue
 
-            # Cualquier otro token
             else:
                 processed_tokens.append(token)
                 i += 1
 
-        # Agregamos matrices temporales (inversas, etc.) al diccionario
+        # Agregamos matrices temporales
         matrix_dict.update(temp_matrices)
 
-        # Si sólo hay un token, puede ser número o matriz
+        # Caso de un solo token
         if len(processed_tokens) == 1:
             token = processed_tokens[0]
             try:
@@ -257,16 +256,15 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                                 term_result = scaled
                             else:
                                 # Validación de dimensiones antes de multiplicar
-                                filasA, colsA = len(term_result), len(term_result[0])
-                                filasB, colsB = len(scaled), len(scaled[0])
-                                if colsA != filasB:
+                                fA, cA = len(term_result), len(term_result[0])
+                                fB, cB = len(scaled), len(scaled[0])
+                                if cA != fB:
                                     self.display.master.show_temporal_message(
-                                        f"No se pueden multiplicar matrices de tamaño "
-                                        f"{filasA}×{colsA} y {filasB}×{colsB}"
+                                        f"No se pueden multiplicar matrices de tamaño {fA}×{cA} y {fB}×{cB}"
                                     )
                                     return
-                                term_result, steps_m = multiply(term_result, scaled)
-                                operations_steps.append(steps_m)
+                                term_result, pasos_m = multiply(term_result, scaled)
+                                operations_steps.append(pasos_m)
 
                             operations_steps.append(steps_s)
                             idx_term += 3
@@ -281,16 +279,15 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                             term_result = mat
                         else:
                             # Validación de dimensiones antes de multiplicar
-                            filasA, colsA = len(term_result), len(term_result[0])
-                            filasB, colsB = len(mat), len(mat[0])
-                            if colsA != filasB:
+                            fA, cA = len(term_result), len(term_result[0])
+                            fB, cB = len(mat), len(mat[0])
+                            if cA != fB:
                                 self.display.master.show_temporal_message(
-                                    f"No se pueden multiplicar matrices de tamaño "
-                                    f"{filasA}×{colsA} y {filasB}×{colsB}"
+                                    f"No se pueden multiplicar matrices de tamaño {fA}×{cA} y {fB}×{cB}"
                                 )
                                 return
-                            term_result, steps_m = multiply(term_result, mat)
-                            operations_steps.append(steps_m)
+                            term_result, pasos_m = multiply(term_result, mat)
+                            operations_steps.append(pasos_m)
 
                         idx_term += 1
                     else:
@@ -301,21 +298,37 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                 # operador '+' o '-'
                 processed_terms.append(term)
 
-        # Combinamos sumas y restas finales
+        # === Sumas y restas finales con validación de dimensiones ===
         result = processed_terms[0]
         idx_res = 1
         while idx_res < len(processed_terms):
             op = processed_terms[idx_res]
             nxt = processed_terms[idx_res + 1]
+            # dimensiones actuales
+            fA, cA = len(result), len(result[0])
+            fB, cB = len(nxt), len(nxt[0])
+
             if op == '+':
-                result, steps_a = add(result, nxt)
-                operations_steps.append(steps_a)
+                if fA != fB or cA != cB:
+                    self.display.master.show_temporal_message(
+                        f"No se pueden sumar matrices de tamaño {fA}×{cA} y {fB}×{cB}"
+                    )
+                    return
+                result, pasos_a = add(result, nxt)
+                operations_steps.append(pasos_a)
+
             elif op == '-':
-                result, steps_s = subtract(result, nxt)
-                operations_steps.append(steps_s)
+                if fA != fB or cA != cB:
+                    self.display.master.show_temporal_message(
+                        f"No se pueden restar matrices de tamaño {fA}×{cA} y {fB}×{cB}"
+                    )
+                    return
+                result, pasos_s = subtract(result, nxt)
+                operations_steps.append(pasos_s)
+
             idx_res += 2
 
-        # Mostramos el resultado y, si hay pasos, los desplegamos
+        # Mostramos el resultado y pasos
         self.display.master.display_matrix.add_matrix_result(operation_str, result)
         if operations_steps:
             op_disp.show_steps(operations_steps)
