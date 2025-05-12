@@ -1,6 +1,6 @@
 # Matrix-Calc
 
-El presente proyeto se trata meramente de una **calculadora de matrices**
+**Matrix-Calc** es una aplicación de escritorio interactiva desarrollada en **Python** con **CustomTkinter** que te permite trabajar con matrices de forma rápida y visual.
 
 ## 1. Requisitos
 
