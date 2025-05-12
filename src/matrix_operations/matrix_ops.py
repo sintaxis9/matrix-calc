@@ -99,4 +99,7 @@ def inverse(matrix):
 def transpose(matrix):
     if not is_numeric(matrix):
         raise ValueError("La matriz debe ser numérica")
-    return [list(row) for row in zip(*matrix)]
+    try:
+        return [list(row) for row in zip(*matrix)]
+    except Exception as e:
+        raise ValueError(f"Error al transponer matriz: {str(e)}")

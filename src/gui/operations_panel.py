@@ -1,5 +1,5 @@
 import customtkinter
-from ..matrix_operations.matrix_ops import add, subtract, multiply, scalar_multiply, determinant, inverse
+from ..matrix_operations.matrix_ops import add, subtract, multiply, scalar_multiply, determinant, inverse, transpose
 
 
 class Operations_Panel(customtkinter.CTkFrame):
@@ -146,6 +146,36 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                         self.display.master.show_temporal_message(result)
                         return
                     i = j + 1 
+
+                elif token.startswith("Tras("):
+                    j = i
+                    matrix_name_parts = []
+                    while j < len(tokens) and ")" not in tokens[j]:
+                        matrix_name_parts.append(tokens[j].replace("Tras(", "").strip())
+                        j += 1
+                    if j < len(tokens):
+                        matrix_name_parts.append(tokens[j].replace(")", "").strip())
+                    matrix_name = " ".join(matrix_name_parts).replace("Tras(", "").strip()
+                    matrix_name = matrix_name.replace(" ", "") 
+                    
+                    if not matrix_name or matrix_name not in matrix_dict:
+                        print(f"Matriz '{matrix_name}' no encontrada")
+                        result = f"Matriz '{matrix_name}' no fue encontrada; guárdala primero"
+                        self.display.master.show_temporal_message(result)
+                        return
+                    
+                    try:
+                        matrix = matrix_dict[matrix_name]
+                        tras = transpose(matrix)
+                        temp_key = f"__TRAS_{matrix_name}__"
+                        temp_matrices[temp_key] = tras
+                        processed_tokens.append(temp_key)
+                    except Exception as e:
+                        print(f"Error en Tras({matrix_name}): {str(e)}")
+                        result = f"Error en Tras({matrix_name}): {str(e)}"
+                        self.display.master.show_temporal_message(result)
+                        return
+                    i = j + 1
                 
                 else:
                     processed_tokens.append(token)
@@ -312,7 +342,6 @@ class Numerical_Methods(customtkinter.CTkFrame):
     def update_numerical(self, operation):
         if operation in ["Det", "Inv", "Tras"]:
             self.display.update_items(operation + "(")
-
         else:
             self.display.update_items(operation)
         print(f"numeric method: {operation}")
