@@ -138,7 +138,9 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                 name = "".join(name_parts).strip()
 
                 if name not in matrix_dict:
-                    self.display.master.show_temporal_message(f"Matriz '{name}' no encontrada; guárdala primero")
+                    self.display.master.show_temporal_message(
+                        f"Matriz '{name}' no encontrada; guárdala primero"
+                    )
                     return
 
                 det_value, det_steps = determinant(matrix_dict[name])
@@ -147,7 +149,7 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                 i = j + 1
                 continue
 
-            # Inversa
+            # Inversa (con manejo de matriz singular)
             elif token.startswith("Inv("):
                 j = i
                 name_parts = []
@@ -159,10 +161,20 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                 name = "".join(name_parts).strip()
 
                 if name not in matrix_dict:
-                    self.display.master.show_temporal_message(f"Matriz '{name}' no encontrada; guárdala primero")
+                    self.display.master.show_temporal_message(
+                        f"Matriz '{name}' no encontrada; guárdala primero"
+                    )
                     return
 
-                inv_matrix, inv_steps = inverse(matrix_dict[name])
+                try:
+                    inv_matrix, inv_steps = inverse(matrix_dict[name])
+                except ValueError:
+                    # inverse() lanza ValueError si la matriz es singular
+                    self.display.master.show_temporal_message(
+                        f"La matriz '{name}' no tiene inversa"
+                    )
+                    return
+
                 key = f"__INV_{name}__"
                 temp_matrices[key] = inv_matrix
                 processed_tokens.append(key)
@@ -182,7 +194,9 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                 name = "".join(name_parts).strip()
 
                 if name not in matrix_dict:
-                    self.display.master.show_temporal_message(f"Matriz '{name}' no encontrada; guárdala primero")
+                    self.display.master.show_temporal_message(
+                        f"Matriz '{name}' no encontrada; guárdala primero"
+                    )
                     return
 
                 tras_matrix, tras_steps = transpose(matrix_dict[name])
@@ -193,14 +207,15 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                 i = j + 1
                 continue
 
+            # Cualquier otro token
             else:
                 processed_tokens.append(token)
                 i += 1
 
-        # Agregamos matrices temporales
+        # Agregamos matrices temporales al diccionario
         matrix_dict.update(temp_matrices)
 
-        # Caso de un solo token
+        # Caso de un solo token (número o matriz)
         if len(processed_tokens) == 1:
             token = processed_tokens[0]
             try:
@@ -210,7 +225,9 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                 if token in matrix_dict:
                     result = matrix_dict[token]
                 else:
-                    self.display.master.show_temporal_message(f"Elemento '{token}' no reconocido")
+                    self.display.master.show_temporal_message(
+                        f"Elemento '{token}' no reconocido"
+                    )
                     return
 
             self.display.master.display_matrix.add_matrix_result(operation_str, result)
@@ -255,12 +272,13 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                             if term_result is None:
                                 term_result = scaled
                             else:
-                                # Validación de dimensiones antes de multiplicar
+                                # Validación de dimensiones
                                 fA, cA = len(term_result), len(term_result[0])
                                 fB, cB = len(scaled), len(scaled[0])
                                 if cA != fB:
                                     self.display.master.show_temporal_message(
-                                        f"No se pueden multiplicar matrices de tamaño {fA}×{cA} y {fB}×{cB}"
+                                        f"No se pueden multiplicar matrices de tamaño "
+                                        f"{fA}×{cA} y {fB}×{cB}"
                                     )
                                     return
                                 term_result, pasos_m = multiply(term_result, scaled)
@@ -278,12 +296,13 @@ class Numeric_Keypad(customtkinter.CTkFrame):
                         if term_result is None:
                             term_result = mat
                         else:
-                            # Validación de dimensiones antes de multiplicar
+                            # Validación de dimensiones
                             fA, cA = len(term_result), len(term_result[0])
                             fB, cB = len(mat), len(mat[0])
                             if cA != fB:
                                 self.display.master.show_temporal_message(
-                                    f"No se pueden multiplicar matrices de tamaño {fA}×{cA} y {fB}×{cB}"
+                                    f"No se pueden multiplicar matrices de tamaño "
+                                    f"{fA}×{cA} y {fB}×{cB}"
                                 )
                                 return
                             term_result, pasos_m = multiply(term_result, mat)
@@ -304,7 +323,6 @@ class Numeric_Keypad(customtkinter.CTkFrame):
         while idx_res < len(processed_terms):
             op = processed_terms[idx_res]
             nxt = processed_terms[idx_res + 1]
-            # dimensiones actuales
             fA, cA = len(result), len(result[0])
             fB, cB = len(nxt), len(nxt[0])
 
@@ -328,10 +346,11 @@ class Numeric_Keypad(customtkinter.CTkFrame):
 
             idx_res += 2
 
-        # Mostramos el resultado y pasos
+        # Mostramos el resultado y, si hay pasos, los desplegamos
         self.display.master.display_matrix.add_matrix_result(operation_str, result)
         if operations_steps:
             op_disp.show_steps(operations_steps)
+
 
 
 
