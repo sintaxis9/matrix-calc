@@ -352,10 +352,6 @@ class Numeric_Keypad(customtkinter.CTkFrame):
             op_disp.show_steps(operations_steps)
 
 
-
-
-
-
 class Numerical_Methods(customtkinter.CTkFrame):
     def __init__(self, master, display):
         super().__init__(master)
@@ -392,8 +388,8 @@ class StepByStepWindow(customtkinter.CTkToplevel):
 
         self.title(f"Pasos de la Operación #{StepByStepWindow.window_count}")
         self.geometry("600x400")
-        
-        
+
+
 class StepByStepWindow(customtkinter.CTkToplevel):
     window_count = 0
     instances: list["StepByStepWindow"] = []
